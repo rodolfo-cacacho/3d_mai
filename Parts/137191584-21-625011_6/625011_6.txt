@@ -1,0 +1,13 @@
+﻿"Symbol";"Value";"Unit";
+"TraceParts.PartNumber";"10-27012020-095652";"";
+"REFERENCE";"625011,6";"";
+"STANDARD2";"25514";"";
+"STANDARD1";"NFE 25513";"";
+"TraceParts.InstanceId";"10-27012020-0956528OOWR8NRLM1ZQBM7MX5YMYNUW";"";
+"TraceParts.PartLanguage";"en";"";
+"TraceParts.PartTitle";"62501 FLAT MEDIUM STAMPED WASHERS TYPE M";"";
+"SUPPLIER";"Acton";"";
+"DESIGN";"62501 FLAT MEDIUM STAMPED WASHERS TYPE M - 625011,6";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"MATERIAL";"Inox A2";"";
+"TraceParts.PartVersion";"1.1.1";"";

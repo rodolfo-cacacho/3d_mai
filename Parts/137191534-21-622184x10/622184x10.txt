@@ -1,0 +1,12 @@
+﻿"Symbol";"Value";"Unit";
+"TraceParts.PartNumber";"10-27012020-095311";"";
+"REFERENCE";"622184X10";"";
+"STANDARD2";"(similar DIN 316)";"";
+"TraceParts.PartTitle";"62218 WING SCREWS - AMERICAN FORM";"";
+"TraceParts.InstanceId";"10-27012020-095311EMB1FFYTKBZBAVC8SAQDNJ7E0";"";
+"TraceParts.PartLanguage";"en";"";
+"SUPPLIER";"Acton";"";
+"DESIGN";"62218 WING SCREWS - AMERICAN FORM - 622184X10";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"MATERIAL";"Inox A2";"";
+"TraceParts.PartVersion";"1.1.1";"";

@@ -1,0 +1,16 @@
+﻿"Symbol";"Value";"Unit";
+"SUPPLIER_NAME";"RS Components";"";
+"TraceParts.PartVersion";"1.0.5";"";
+"SUPPLIER";"NSK-RHP";"";
+"TraceParts.PartStatus";"Published";"";
+"TraceParts.PartNumber";"10-07062019-119320";"";
+"TraceParts.PartLanguage";"en";"";
+"DESIGN";"10mm Deep Groove Ball Bearing 19mm O.D";"";
+"TraceParts.InstanceId";"10-07062019-1193203QLWUNMGJXO7W29I39M4BT35C";"";
+"TraceParts.PartTitle";"10mm Deep Groove Ball Bearing 19mm O.D";"";
+"REFERENCE";"6800ZZ";"";
+"Buy_Now";"https://uk.rs-online.com/web/p/products/4922099?cm_mmc=en-ds-_-mcad-_-traceparts-_-4922099'";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"TraceParts.PartStatusId";"";"";
+"rs_stock_number";"4922099";"";
+"TraceParts.ClassPath";"RS_COMPONENTS:10-07062019-119320";"";
