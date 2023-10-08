@@ -6,6 +6,7 @@ In this file we collect our decisions and notes while working on the project, so
 We read more about object detection and we learned that there are the two popular architectures:
 - YOLO (You only look once) 
 - R-CNN (One model for attention proposal + one model for object detection)
+  
 Since YOLO is said to be simpler to implement and reach a near instant prediction time, we decided on first trying out the YOLO model.
 Although the YOLO model is probably less accurate than the R-CNN model. If we have time later in the project, we want to try out R-CNN, too.
 
