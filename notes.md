@@ -14,3 +14,18 @@ References:
 - YOLO paper: https://arxiv.org/abs/1506.02640
 - YOLO version 1 to 8: https://www.mdpi.com/2075-1702/11/7/677  
 
+Outcome:
+- We created training images with bounding boxes and collected it in the folder and file structure that is expected by YOLOv8
+- Then we trained a YOLOv8 Nano model for 3 epochs with around 2000 images of four different objects.
+- These are the predictions for some of the images:
+
+![val_batch1_pred](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/0ba5ad68-611f-4b49-8f4d-8a51523a3c3c)
+![confusion_matrix](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/3e186b16-b319-4822-945f-7404c3274647)
+
+- The results are quite good, even for two screws that only differ in their size. But the predictions are obviously not perfect yet.
+
+Limitations still:
+- The objects are a constant size and they are only in the middle of the image. Images are not augmented at all, which will result in bad predictions for real images.
+- The training images are very far from what real images in the manufacturing environment will look like.
+- The model trains for quite long (> 20 mins) on my Macbook Pro 2017. Since the training pipeline is not optimized and also since GPU isn't used.
+- The validation images are very close to the training images (maybe they are even the same in many cases), since there are 2.000 images of each object and they are only rotated. Logically the objects are exactly the same when the object is turned by 360 degrees.
