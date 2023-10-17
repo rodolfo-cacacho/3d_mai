@@ -26,3 +26,4 @@ Limitations still:
 - The objects are a constant size and they are only in the middle of the image. Images are not augmented at all, which will result in bad predictions for real images.
 - The training images are very far from what real images in the manufacturing environment will look like.
 - The model trains for quite long (> 20 mins) on my Macbook Pro 2017. Since the training pipeline is not optimized and also since GPU isn't used.
+- The validation images are very close to the training images (maybe they are even the same in many cases), since there are 2.000 images of each object and they are only rotated. Logically the objects are exactly the same when the object is turned by 360 degrees.
