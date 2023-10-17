@@ -20,6 +20,8 @@ Outcome:
 - These are the predictions for some of the images:
 
 ![val_batch1_pred](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/0ba5ad68-611f-4b49-8f4d-8a51523a3c3c)
+![confusion_matrix](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/3e186b16-b319-4822-945f-7404c3274647)
+
 - The results are quite good, even for two screws that only differ in their size. But the predictions are obviously not perfect yet.
 
 Limitations still:
