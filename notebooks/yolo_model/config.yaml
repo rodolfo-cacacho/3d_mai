@@ -6,4 +6,4 @@ test: /Users/mariusoechslein/Documents/MyDocuments/Studium/Master/3d-parts-proje
 nc: 4
 
 # class names
-names: ['dst4', '10_00_0125_0084a_v4a', '210216-4x20', '210216-4x10']
+names: ['10_00_0125_0084a_v4a', 'dst4', '210216-4x20', '210216-4x10']
