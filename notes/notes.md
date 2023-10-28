@@ -29,3 +29,22 @@ Limitations still:
 - The training images are very far from what real images in the manufacturing environment will look like.
 - The model trains for quite long (> 20 mins) on my Macbook Pro 2017. Since the training pipeline is not optimized and also since GPU isn't used.
 - The validation images are very close to the training images (maybe they are even the same in many cases), since there are 2.000 images of each object and they are only rotated. Logically the objects are exactly the same when the object is turned by 360 degrees.
+
+---
+### 23-11-02 Further preprocessing and Flowcharts
+
+We want to extend the preprocessing phase to come close to real world images, by:
+- Moving object around in 2D image
+- Change lighting and material of 3D object
+- Change background of 2D image to real world background
+
+Also we want to document the preprocessing and model architecture by flowcharts.
+
+Outcome:
+
+Preprocessing pipeline             |  Object detection/ Classification pipeline
+:-------------------------:|:-------------------------:
+![Flowchart-preprocessing drawio](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/44be0e74-c991-483e-acd4-73a4a0cc575b)  |  ![Flowchart-classification drawio](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/e298eee8-7e14-4609-b6e2-8367fbd271b8)
+
+
+
