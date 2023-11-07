@@ -1,6 +1,5 @@
 train: /Users/mariusoechslein/Documents/MyDocuments/Studium/Master/3d-parts-project/3d_mai/data/train/
 val:  /Users/mariusoechslein/Documents/MyDocuments/Studium/Master/3d-parts-project/3d_mai/data/val/
-test: /Users/mariusoechslein/Documents/MyDocuments/Studium/Master/3d-parts-project/3d_mai/data/val/
 
 # number of classes
 nc: 4
