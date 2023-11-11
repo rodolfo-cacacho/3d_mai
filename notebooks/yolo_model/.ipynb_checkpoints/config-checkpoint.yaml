@@ -1,8 +1,0 @@
-train: /Users/mariusoechslein/Documents/MyDocuments/Studium/Master/3d-parts-project/3d_mai/data/train/
-val:  /Users/mariusoechslein/Documents/MyDocuments/Studium/Master/3d-parts-project/3d_mai/data/val/
-
-# number of classes
-nc: 4
-
-# class names
-names: ['10_00_0125_0084a_v4a', 'dst4', '210216-4x20', '210216-4x10']
