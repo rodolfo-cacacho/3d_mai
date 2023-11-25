@@ -104,10 +104,10 @@ def check_image_dimensions(data_path):
 
     # Assert that it's 2D images
     try:
-        assert len(image.shape) == 2
+        assert len(image.shape) == 3
         print("PASSED: image dimensions:", image.shape, "in:", data_path)
     except:
-        print("FAILED: image is not 2D, image dimensions:", image.shape, "in:", data_path)
+        print("FAILED: image is not 3D, image dimensions:", image.shape, "in:", data_path)
 
 
 if __name__ == '__main__':
@@ -119,4 +119,5 @@ if __name__ == '__main__':
     print("--- START: CHECKING IMAGE DIMENSIONS")
     check_image_dimensions(DATA_PATH/'train'/'images')
     check_image_dimensions(DATA_PATH/'val'/'images')
+    check_image_dimensions(DATA_PATH/'test'/'images')
     print("--- END: CHECKING IMAGE DIMENSIONS")
