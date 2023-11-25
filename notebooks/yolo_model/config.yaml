@@ -1,5 +1,5 @@
-train: ../../data/training_data/train/
-val: ../../data/training_data/val/
+train: ../../data/train/
+val: ../../data/test/
 test: ../../data/test/
 
 # number of classes
