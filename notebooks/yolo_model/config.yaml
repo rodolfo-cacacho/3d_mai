@@ -1,9 +1,9 @@
 train: ../../../data/train/
-val: ../../../data/test/
+val: ../../../data/assembly/test/
 test: ../../data/test/
 
 # number of classes
-nc: 4
+nc: 2
 
 # class names
-names: ['dst4', '210216-4x20', '210216-4x10', '10_00_0125_0084a_v4a']
+names: ['nut', 'screw']
