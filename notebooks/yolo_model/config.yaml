@@ -1,9 +1,14 @@
-train: ../../data/train/
-val: ../../data/test/
-test: ../../data/test/
+path: ../../../data
+train: train/images
+val: val/images
+test: test/images
 
 # number of classes
 nc: 4
 
 # class names
-names: ['10_00_0125_0084a_v4a', '210216-4x10', '210216-4x20', 'dst4']
+names:
+  - 10_00_0125_0084a_v4a
+  - 210216-4x10
+  - 210216-4x20
+  - dst4
