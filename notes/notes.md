@@ -49,3 +49,16 @@ Preprocessing pipeline             |  Object detection/ Classification pipeline
 
 
 
+### Final steps 08.12.23
+
+So our new approach is manually labeling the assemblies (since it's not easily possible automatically).
+
+To do's: 
+- The generated images should only rotate the object. -> With this state, we could then hand-label these "few" images -> After that we can zoom in and move the objects in the picture, since we can calculate the new positions of the bounding box automatically.
+- Mohammad wants to look into, if it's possible to automatically get the 2D bounding boxes from the 3D objects. Although this sounds hard and could go wrong, so while he's trying it, we are looking to make it work with hand-labeling first.
+
+To make it work the first time: 
+- Creating working training images (with threads). -> For this Rodolfo should only export the rotated objects. Then we can label it and then we can zoom and move them. 
+- Then manually label the subparts of the assemblies.
+- Then create as many training images as we want. Maybe even more then before.
+- Then train the YOLO model even longer than before.
