@@ -59,6 +59,6 @@ To do's:
 
 To make it work the first time: 
 - Creating working training images (with threads). -> For this Rodolfo should only export the rotated objects. Then we can label it and then we can zoom and move them. 
-- Then manually label the subparts of the assemblies.
+- Then manually label the subparts of the assemblies. Note: We can upload the folder of the images and folder of the annotations to roboflow, which automatically detects which image and annotation belong to each other. Then we only have to manually label the assemblies.
 - Then create as many training images as we want. Maybe even more then before.
 - Then train the YOLO model even longer than before.
