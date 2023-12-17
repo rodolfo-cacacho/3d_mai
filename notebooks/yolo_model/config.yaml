@@ -1,5 +1,5 @@
-train: ../../../data/train_threads_b/overlaying/augmented
-val: ../../../data/real_images/2_real_imgs/test
+train: ../../../data/train_threads_b/overlaying/train_val_split/train
+val: ../../../data/train_threads_b/overlaying/train_val_split/val
 test: ../../data/test/
 
 # number of classes
