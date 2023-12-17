@@ -1,9 +1,9 @@
-train: ../../../data/train/
-val: ../../../data/assembly/test/
+train: ../../../data/train_threads_b/object_train_val/train/
+val: ../../../data/real_images/2_real_imgs/test
 test: ../../data/test/
 
 # number of classes
-nc: 2
+nc: 5
 
 # class names
-names: ['nut', 'screw']
+names: ['nut', 'screw-small', 'washer', 'screw-large', 'assembly']
