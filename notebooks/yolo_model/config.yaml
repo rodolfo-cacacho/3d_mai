@@ -1,4 +1,4 @@
-train: ../../../data/train_threads_b/overlaying/train_val_split/train
+train: ../../../data/train_threads_b/overlaying/train_val_split/train/augmented
 val: ../../../data/real_images/2_real_imgs/raw
 test: ../../../data/train_threads_b/overlaying/train_val_split/val
 
