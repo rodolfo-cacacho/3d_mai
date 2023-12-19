@@ -1,9 +1,9 @@
-train: ../../../data/train_threads_b/overlaying/train_val_split/train/augmented
+train: ../../../data/train_threads_b/overlaying/train_val_split/train
 val: ../../../data/real_images/2_real_imgs/raw
 test: ../../../data/train_threads_b/overlaying/train_val_split/val
 
 # number of classes
-nc: 5
+nc: 4
 
 # class names
-names: ['nut', 'screw-small', 'washer', 'screw-large', 'assembly']
+names: ['nut', 'screw-small', 'washer', 'screw-large']
