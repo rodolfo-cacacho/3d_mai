@@ -1,6 +1,6 @@
-train: ../../../data/train_threads_b/overlaying/train_val_split/train
-val: ../../../data/real_images/2_real_imgs/raw
-test: ../../../data/train_threads_b/overlaying/train_val_split/val
+train: ../../../data/train_threads_b/object_train_val/train/augmented
+val: ../../../data/real_images/4_real_images/preprocessed-resized/annotated
+test: ../../../data/real_images/3_real_imgs/test/images
 
 # number of classes
 nc: 4
