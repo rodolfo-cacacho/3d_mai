@@ -1,5 +1,5 @@
-train: ../../../data/train_threads_b/object_train_val/train/augmented
-val: ../../../data/real_images/4_real_images/preprocessed-resized/annotated
+train: ../../../data/train_threads_b/object_train_val/train/augmented3/preprocessed/images
+val: ../../../data/real_images/4_real_images/preprocessed-resized/annotated/augmented/test/images
 test: ../../../data/real_images/3_real_imgs/test/images
 
 # number of classes
