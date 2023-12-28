@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
+from tkinter import ttk
 import os
 import shutil # For copying files
 import subprocess # For opening folder in file explorer
@@ -8,22 +9,6 @@ import platform # For checking operating system
 
 FOLDER_PATH = ""
 
-class LoadingScreen:
-    def __init__(self, root, title="Loading..."):
-        self.root = root
-        self.title = title
-
-        # Create a Toplevel window for the loading screen
-        self.loading_window = tk.Toplevel(root)
-        self.loading_window.title("Loading")
-
-        # Title Label
-        title_label = tk.Label(self.loading_window, text=self.title)
-        title_label.pack(pady=10)
-
-        # Loading Message Label
-        loading_label = tk.Label(self.loading_window, text="Loading, please wait...")
-        loading_label.pack(pady=10)
 
 """For copying a folder to another folder
 Note: Make sure that the content in the destination folder is not overwritten. The content should just be appended.
@@ -345,6 +330,71 @@ class Window2:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+
+
+
+"""For preprocessing the images in the 'combined-annotated' folder. Moving them to preprocessed folder then.
+"""
+class Window3:
+    def __init__(self, root, next_callback=None):
+        self.root = root
+        self.title = "Assembly detection"
+
+        # Welcome Text
+        welcome_label = tk.Label(root, text="Preprocess images.")
+        welcome_label.pack(pady=10)
+
+        self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+        self.progress_bar.pack(pady=20)
+        self.progress_bar["maximum"] = 100
+        self.progress_bar["value"] = 0
+
+        # Create a button to start the loading
+        start_button = tk.Button(root, text="Start preprocessing", command=self.start_preprocessing_images)
+        start_button.pack(pady=10)
+
+
+        # Finished Uploading Button
+        finish_button = tk.Button(root, text="Next step", command=self.next)
+        finish_button.pack(side=tk.RIGHT, padx=5)
+
+        # Callback for Next Window
+        self.next_callback = next_callback
+
+    def start_preprocessing_images(self):
+        # Create a thread for the long-running task
+        import threading
+        loading_thread = threading.Thread(target=self.long_running_function)
+        loading_thread.start()
+
+    def long_running_function(self):
+        # Simulate a long-running task that updates the progress bar
+        import time
+        for value in range(0, 101, 10):
+            time.sleep(1)  # Simulate work
+            # TODO: Call preprocessing function
+
+            # Update the progress bar on the main thread
+            self.root.after(0, self.update_progress, value)
+        print("Done preprocessing")
+
+    def update_progress(self, value):
+        self.progress_bar["value"] = value
+
+
+    def next(self):
+        print("Finished preprocessing images")
+
+        # Call the callback function if provided
+        if self.next_callback:
+            self.destroy()  # Destroy the widgets of the current window
+            self.next_callback()   # Show the next window
+
+    def destroy(self):
+        # Destroy all widgets in the current window
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
 assemblies = []
 single_parts = []
 
@@ -359,10 +409,13 @@ def main():
         window1 = Window1(root, show_window2)
 
     def show_window2():
-        window2 = Window2(root, show_window1)
+        window2 = Window2(root, show_window3)
+
+    def show_window3():
+        window3 = Window3(root, show_window1)
 
     # Starting with Window 0. Setting folder for storing images and model.
-    show_window0()
+    show_window3()
 
     root.mainloop()
 

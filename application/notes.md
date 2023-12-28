@@ -43,7 +43,17 @@ State 27.12 to continue tommorow from:
 - window0: Setup correct folder structure and start with manually adding raw screenshots to there (some that I already have)
 - window1: Select assemblies and single parts 3D CAD files; TODO: Create 2D screenshots from that and save to correct folders. TODO: assemblies to assemblies folder and single parts to orginal images folder
 - window2: Download the assmbly images somehow to the Downloads folder. So that user can upload them easily to Roboflow for manual labeling.
-- TODO: Then: Upload images and labels folders from Roboflow.
-- TODO: Preprocessing (adding noise); ...
+    - TODO: maybe download the images to Downloads folder and don't show actual folder. Let's see.
+- window2: Upload images and labels folders from Roboflow.
+- TODO: window3: Preprocessing (adding noise); ...
 - TODO: Create perfect training setup
 - TODO: Train model
+
+Preprocessing workflow:
+- Maybe TODO: Make sure images are 800x450
+- TODO: Find bounding boxes for single-parts (in labels folder) -> copy to combined-folder
+- TODO Check: Manually annotate and -> copy to combined folder
+-> TODO: State: raw images and annotated labels in combined-folder
+- TODO: Add noise to all images in combined-folder
+- Integrate TODO: Preprocess (Detect contours) + Maybe resize to 800x450???? TODO
+- Finished. Train from here.
