@@ -8,6 +8,7 @@ import subprocess # For opening folder in file explorer
 import platform # For checking operating system
 
 FOLDER_PATH = ""
+CLASS_LIST = []
 
 
 """For copying a folder to another folder
@@ -309,7 +310,9 @@ class Window2:
         print("Selected folder path:", folder_path)
 
         # Then copy image and labels files to the 'combined-annotated' folder
-        num_images, num_labels = copy_folder(folder_path, FOLDER_PATH + "/combined-annotated")
+        source_folder_path = folder_path
+        destination_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
+        num_images, num_labels = copy_folder(source_folder_path, destination_folder_path)
 
         # Update labels
         self.images_uploaded_label.config(text=f"Images uploaded: {num_images}")
@@ -364,23 +367,51 @@ class Window3:
     def start_preprocessing_images(self):
         # Create a thread for the long-running task
         import threading
-        loading_thread = threading.Thread(target=self.long_running_function)
+        loading_thread = threading.Thread(target=self.preprocess)
         loading_thread.start()
 
-    def long_running_function(self):
-        # Simulate a long-running task that updates the progress bar
-        import time
-        for value in range(0, 101, 10):
-            time.sleep(1)  # Simulate work
-            # TODO: Call preprocessing function
+    def preprocess(self):
+        self.root.after(0, self.update_progress, 0)
+        # 1. Get bounding boxes for single-parts. Put label files into 'single-parts/labels' folder.
+        from get_bboxes_single_parts import create_label_files
+        global CLASS_LIST
+        global FOLDER_PATH
+        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test" # TODO: Remove
+        images_path = os.path.join(FOLDER_PATH, "single-parts/images")
+        labels_path = os.path.join(FOLDER_PATH, "single-parts/labels")
+        CLASS_LIST = create_label_files(images_path, labels_path, CLASS_LIST)
 
-            # Update the progress bar on the main thread
-            self.root.after(0, self.update_progress, value)
+        self.root.after(0, self.update_progress, 20)
+        # 2. Add single parts folder to 'combined-annotated' folder.
+        source_folder_path = os.path.join(FOLDER_PATH, "single-parts")
+        destination_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
+        _, _ = copy_folder(source_folder_path, destination_folder_path)
+
+        self.root.after(0, self.update_progress, 40)
+        # 3. Move + zoom of 'combined-annotated/images' images.
+        
+
+
+        self.root.after(0, self.update_progress, 60)
+        # 4. Add noise to 'combined-annotated/images' images.
+        from augment_combined_images import augment_combined_folder
+        combined_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
+        NUM_OF_AUGMENTED_IMAGES = 2
+        augment_combined_folder(combined_folder_path, NUM_OF_AUGMENTED_IMAGES)
+
+        self.root.after(0, self.update_progress, 80)
+        # 5. Preprocess 'combined-annotated/images' images.
+        from preprocessing import preprocess_images
+        source_images_path = os.path.join(FOLDER_PATH, "combined-annotated/images")
+        destination_images_path = os.path.join(FOLDER_PATH, "combined-annotated/images")
+        target_resolution = (800, 450)
+        preprocess_images(source_images_path, destination_images_path, target_resolution)
+
+        self.root.after(0, self.update_progress, 100)            
         print("Done preprocessing")
 
     def update_progress(self, value):
         self.progress_bar["value"] = value
-
 
     def next(self):
         print("Finished preprocessing images")

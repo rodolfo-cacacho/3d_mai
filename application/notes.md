@@ -57,3 +57,8 @@ Preprocessing workflow:
 - TODO: Add noise to all images in combined-folder
 - Integrate TODO: Preprocess (Detect contours) + Maybe resize to 800x450???? TODO
 - Finished. Train from here.
+
+TODO:
+- Maybe I should store the manually annotated images somewhere, so they don't get lost. Right now I'm only storing the single-parts images and labels separately.
+
+TODO: Preprocess function in Window3
