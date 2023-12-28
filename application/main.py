@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
+import os
 import shutil # For copying files
 
 FOLDER_PATH = ""
@@ -60,10 +62,40 @@ class Window0:
         self.folder_path_label.config(text="Selected folder:" + FOLDER_PATH)
 
     def next(self):
+        self.create_folder_structure()
+
         # Call the callback function if provided
         if self.next_callback:
             self.destroy()  # Destroy the widgets of the current window
             self.next_callback()   # Show the next window
+
+    def create_folder_structure(self):
+        folders = ["cad-files", "original-images", "preprocessed", "train"]
+
+        for folder in folders:
+            folder_path = os.path.join(FOLDER_PATH, folder)
+
+            # Check if the folder exists
+            if os.path.exists(folder_path):
+                # List files in the folder
+                files = os.listdir(folder_path)
+
+                if files:
+                    print(f"There are files in {folder_path}")
+
+                    # Ask for confirmation using a Tkinter popup
+                    confirmation = messagebox.askyesno("Confirmation", f"Do you want to delete all files in {folder_path}?")
+
+                    if confirmation:
+                        # Delete all files in the folder
+                        for file in files:
+                            file_path = os.path.join(folder_path, file)
+                            os.remove(file_path)
+                        print(f"All files in {folder_path} deleted.")
+            else:
+                os.makedirs(folder_path, exist_ok=True)
+                print(f"{folder_path} created.")
+        
 
     def destroy(self):
         # Destroy all widgets in the current window
