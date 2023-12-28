@@ -3,6 +3,8 @@ from tkinter import filedialog
 from tkinter import messagebox
 import os
 import shutil # For copying files
+import subprocess # For opening folder in file explorer
+import platform # For checking operating system
 
 FOLDER_PATH = ""
 
@@ -23,8 +25,66 @@ class LoadingScreen:
         loading_label = tk.Label(self.loading_window, text="Loading, please wait...")
         loading_label.pack(pady=10)
 
+"""For copying a folder to another folder
+Note: Make sure that the content in the destination folder is not overwritten. The content should just be appended.
+Note: This is important for multiple parts of the application. That's why it's a separate function.
+"""
+def copy_folder(source_folder, destination_folder):
+    # Check if the destination folder exists. Create otherwise.
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder, exist_ok=True)
+        print(f"Created folder: {destination_folder}")
+
+    # Specify folder paths
+    source_images_folder = os.path.join(source_folder, "images")
+    destination_images_folder = os.path.join(destination_folder, "images")
+    source_labels_folder = os.path.join(source_folder, "labels")
+    destination_labels_folder = os.path.join(destination_folder, "labels")
+
+    # Go through source_folder images and labels folder -> Copy file by file to destination_folder images and labels folder    
+    # Copy over images 
+    source_images = os.listdir(source_images_folder)
+    num_images = len(source_images)
+    for file in source_images:
+        source_file_path = os.path.join(source_images_folder, file)
+        destination_file_path = os.path.join(destination_images_folder, file)
+        try:
+            shutil.copy(source_file_path, destination_file_path)
+        except shutil.Error as e:
+            print(f"Error copying file: {e}")
+            num_images -= 1
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            num_images -= 1
+    print(f"Copyied all images from '{source_folder}' to '{destination_folder}' successfully.")
+
+    # Copy over labels 
+    source_labels = os.listdir(source_labels_folder)
+    num_labels = len(source_labels)
+    for file in source_labels:
+        source_file_path = os.path.join(source_labels_folder, file)
+        destination_file_path = os.path.join(destination_labels_folder, file)
+        try:
+            shutil.copy(source_file_path, destination_file_path)
+        except shutil.Error as e:
+            print(f"Error copying file: {e}")
+            num_labels -= 1
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            num_labels -= 1
+    print(f"Copyied all labels from '{source_folder}' to '{destination_folder}' successfully.")
+    
+    return num_images, num_labels
+
 
 """For selecting folder where all the images and model should be stored on local machine
+
+Creates the following folder structure:#
+    - cad-files: For storing the 3D CAD files
+    - assembly-images: For storing the assembly images that the user has to manually annotate
+    - original-images: For storing all annotated images (assemblies and single parts)
+    - preprocessed: For storing all preprocessed images
+    - train: TODO
 """
 class Window0:
     def __init__(self, root, next_callback=None):
@@ -70,7 +130,14 @@ class Window0:
             self.next_callback()   # Show the next window
 
     def create_folder_structure(self):
-        folders = ["cad-files", "original-images", "preprocessed", "train"]
+        folders = [
+            "cad-files", 
+            "assembly-images", # Only images
+            "single-parts", "single-parts/images", "single-parts/labels", 
+            "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
+            "preprocessed", "preprocessed/images", "preprocessed/labels",
+            "train", "train/images", "train/labels",
+        ]
 
         for folder in folders:
             folder_path = os.path.join(FOLDER_PATH, folder)
@@ -204,24 +271,33 @@ class Window2:
         self.title = "Assembly detection"
         global assemblies
 
-        # Welcome Text
-        welcome_label = tk.Label(root, text="Download assembly images, manually annotate with Roboflow and then upload the annotations from Roboflow.")
+        # Download images
+        welcome_label = tk.Label(root, text="1. Upload assembly images to Roboflow.")
         welcome_label.pack(pady=10)
-
-        # Assemblies Upload List
-        assemblies_uploaded_label = tk.Label(root, text="Assemblies uploaded")
-        assemblies_uploaded_label.pack(pady=[10, 0])
-        self.assemblies_uploaded = tk.Listbox(root, selectmode=tk.MULTIPLE, width=40, height=10, borderwidth=2, relief="solid")
-        self.assemblies_uploaded.pack(pady=0)
-        for file_path in assemblies:
-            file_name = file_path.split("/")[-1]
-            self.assemblies_uploaded.insert(tk.END, file_name)
-        download_assemblies_button = tk.Button(root, text="Download assembly images", command=self.download_assemblies)
+        download_assemblies_button = tk.Button(root, text="Show assembly images to download", command=self.show_assembly_folder)
         download_assemblies_button.pack(side=tk.TOP, pady=5)
+
+        # Manually annotate label hint
+        welcome_label = tk.Label(root, text="2. Manually annotate the images with Roboflow. Export in YOLOv8 format!")
+        welcome_label.pack(pady=10)
+        
+        # Welcome Text
+        welcome_label = tk.Label(root, text="3. Select folder of extracted Roboflow export here.")
+        welcome_label.pack(pady=10)
+        download_assemblies_button = tk.Button(root, text="Select extracted Roboflow export folder", command=self.upload_annotated)
+        download_assemblies_button.pack(side=tk.TOP, pady=5)
+
+        # Files uploaded label
+        self.images_uploaded_label = tk.Label(root, text="Images uploaded: 0")
+        self.images_uploaded_label.pack(pady=[10, 0])
+
+        self.labels_uploaded_label = tk.Label(root, text="Labels uploaded: 0")
+        self.labels_uploaded_label.pack(pady=[0, 10])
+
 
         # Finished Uploading Button
         finish_button = tk.Button(root, text="Next step", command=self.next)
-        finish_button.pack(side=tk.LEFT, padx=5)
+        finish_button.pack(side=tk.RIGHT, padx=5)
 
         # File Types for Upload
         self.file_types = [("Images", "*.jpg")]
@@ -229,11 +305,31 @@ class Window2:
         # Callback for Next Window
         self.next_callback = next_callback
 
-    def download_assemblies(self):
-        # Download assembly images folder to Downloads folder
-        pass 
-        
-        
+    """TODO: Maybe just download the images to the downloads folder? And not the 'assembly-images' folder.
+    """
+    def show_assembly_folder(self):
+        # Open the assembly folder, that the user should upload to Roboflow
+        folder_path = FOLDER_PATH + "/assembly-images"
+        if platform.system() == "Windows":
+            subprocess.run(["explorer", folder_path], shell=True)
+        elif platform.system() == "Darwin":
+            subprocess.run(["open", folder_path])
+        elif platform.system() == "Linux":
+            subprocess.run(["xdg-open", folder_path])
+        else:
+            print("Unsupported operating system") 
+
+    def upload_annotated(self):
+        folder_path = filedialog.askdirectory(title="Select Folder of Roboflow export")
+        print("Selected folder path:", folder_path)
+
+        # Then copy image and labels files to the 'combined-annotated' folder
+        num_images, num_labels = copy_folder(folder_path, FOLDER_PATH + "/combined-annotated")
+
+        # Update labels
+        self.images_uploaded_label.config(text=f"Images uploaded: {num_images}")
+        self.labels_uploaded_label.config(text=f"Labels uploaded: {num_labels}")
+
 
     def next(self):
         # Add your logic for handling the "Finished uploading" action

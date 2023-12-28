@@ -40,8 +40,8 @@ Basic GUI functions/views:
 
 State 27.12 to continue tommorow from:
 - window0: Select folder where everything should be stored to
-- window1: Select assemblies and single parts 3D CAD files; TODO: Create 2D screenshots from that and save to correct folder
-- TODO: Setup correct folder structure and start with manually adding raw screenshots to there (some that I already have)
+- window0: Setup correct folder structure and start with manually adding raw screenshots to there (some that I already have)
+- window1: Select assemblies and single parts 3D CAD files; TODO: Create 2D screenshots from that and save to correct folders. TODO: assemblies to assemblies folder and single parts to orginal images folder
 - window2: Download the assmbly images somehow to the Downloads folder. So that user can upload them easily to Roboflow for manual labeling.
 - TODO: Then: Upload images and labels folders from Roboflow.
 - TODO: Preprocessing (adding noise); ...
