@@ -376,7 +376,7 @@ class Window3:
         from get_bboxes_single_parts import create_label_files
         global CLASS_LIST
         global FOLDER_PATH
-        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test" # TODO: Remove
+
         images_path = os.path.join(FOLDER_PATH, "single-parts/images")
         labels_path = os.path.join(FOLDER_PATH, "single-parts/labels")
         CLASS_LIST = create_label_files(images_path, labels_path, CLASS_LIST)
@@ -388,19 +388,23 @@ class Window3:
         _, _ = copy_folder(source_folder_path, destination_folder_path)
 
         self.root.after(0, self.update_progress, 40)
-        # 3. Move + zoom of 'combined-annotated/images' images.
-        
+        # 3. Move + zoom of 'combined-annotated/images' images. Export to train folder.
+        # TODO: Implement
+        #from augment_move_and_zoom import move_and_zoom
+        source_path = os.path.join(FOLDER_PATH, "combined-annotated")
+        destination_path = os.path.join(FOLDER_PATH, "train")
+        #CLASS_LIST = move_and_zoom(source_path, destination_path, CLASS_LIST) # TODO: Doesn't work yet...
 
 
         self.root.after(0, self.update_progress, 60)
-        # 4. Add noise to 'combined-annotated/images' images.
+        # 4. Add noise to 'combined-annotated/images' images. TODO: Export to train folder
         from augment_combined_images import augment_combined_folder
         combined_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
         NUM_OF_AUGMENTED_IMAGES = 2
         augment_combined_folder(combined_folder_path, NUM_OF_AUGMENTED_IMAGES)
 
         self.root.after(0, self.update_progress, 80)
-        # 5. Preprocess 'combined-annotated/images' images.
+        # 5. Preprocess 'combined-annotated/images' images. # TODO: Export to train folder
         from preprocessing import preprocess_images
         source_images_path = os.path.join(FOLDER_PATH, "combined-annotated/images")
         destination_images_path = os.path.join(FOLDER_PATH, "combined-annotated/images")
@@ -432,6 +436,10 @@ single_parts = []
 def main():
     root = tk.Tk()
     root.title("Assembly detection")
+
+    # TODO: Remove
+    global FOLDER_PATH
+    FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test"
 
     def show_window0():
         window0 = Window0(root, show_window1)
