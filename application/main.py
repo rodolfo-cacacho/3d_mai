@@ -6,16 +6,25 @@ import os
 import shutil # For copying files
 import subprocess # For opening folder in file explorer
 import platform # For checking operating system
+import yaml # For editing config.yaml file
 
-FOLDER_PATH = ""
-CLASS_LIST = []
+def show_folder(folder_path):
+        # Open the assembly folder, that the user should upload to Roboflow
+        folder_path = FOLDER_PATH + "/assembly-images"
+        if platform.system() == "Windows":
+            subprocess.run(["explorer", folder_path], shell=True)
+        elif platform.system() == "Darwin":
+            subprocess.run(["open", folder_path])
+        elif platform.system() == "Linux":
+            subprocess.run(["xdg-open", folder_path])
+        else:
+            print("Unsupported operating system") 
 
-
-"""For copying a folder to another folder
-Note: Make sure that the content in the destination folder is not overwritten. The content should just be appended.
-Note: This is important for multiple parts of the application. That's why it's a separate function.
-"""
 def copy_folder(source_folder, destination_folder):
+    """For copying a folder to another folder
+    Note: Make sure that the content in the destination folder is not overwritten. The content should just be appended.
+    Note: This is important for multiple parts of the application. That's why it's a separate function.
+    """
     # Check if the destination folder exists. Create otherwise.
     if not os.path.exists(destination_folder):
         os.makedirs(destination_folder, exist_ok=True)
@@ -296,14 +305,7 @@ class Window2:
     def show_assembly_folder(self):
         # Open the assembly folder, that the user should upload to Roboflow
         folder_path = FOLDER_PATH + "/assembly-images"
-        if platform.system() == "Windows":
-            subprocess.run(["explorer", folder_path], shell=True)
-        elif platform.system() == "Darwin":
-            subprocess.run(["open", folder_path])
-        elif platform.system() == "Linux":
-            subprocess.run(["xdg-open", folder_path])
-        else:
-            print("Unsupported operating system") 
+        show_folder(folder_path)
 
     def upload_annotated(self):
         folder_path = filedialog.askdirectory(title="Select Folder of Roboflow export")
@@ -430,6 +432,127 @@ class Window3:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+
+class Window4:
+    """For training the YOLO model from preprocessed images in the 'train' folder.
+    """
+    def __init__(self, root, next_callback=None):
+        self.root = root
+        self.title = "Assembly detection"
+
+        # Welcome Text
+        welcome_label = tk.Label(root, text="Training the model. This might take a while, depending on training set size and number of epochs. Probably around 1 hour.")
+        welcome_label.pack(pady=10)
+
+        # Create a label to display the selected value
+        self.value_label = tk.Label(root, text="Epochs to train: 0")
+        self.value_label.pack(pady=10)
+
+        # Create a slider with values from 0 to 20
+        self.slider = ttk.Scale(root, from_=0, to=20, orient="horizontal", length=300, command=self.update_value)
+        self.slider.pack(pady=[0,20])
+
+        # Progress bar text
+        welcome_label = tk.Label(root, text="Model training progress bar")
+        welcome_label.pack(pady=10)
+        # Progress bar for training
+        self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+        self.progress_bar.pack(pady=[0,20])
+        self.progress_bar["maximum"] = 100
+        self.progress_bar["value"] = 0
+
+        # Create a button to start the loading
+        start_button = tk.Button(root, text="Start training", command=self.start_training)
+        start_button.pack(pady=10)
+
+        # Finished Uploading Button
+        finish_button = tk.Button(root, text="Next step", command=self.next)
+        finish_button.pack(side=tk.RIGHT, padx=5)
+
+        # Callback for Next Window
+        self.next_callback = next_callback
+
+    def update_value(self, value):
+        # Update the label with the selected value
+        rounded_value = round(float(value))
+        self.value_label.config(text=f"Selected Value: {rounded_value}")    
+
+    def start_training(self):
+        # Create a thread for the long-running task
+        import threading
+        loading_thread = threading.Thread(target=self.training)
+        loading_thread.start()
+
+    def training(self):
+        global CLASS_LIST
+        global FOLDER_PATH
+
+        self.root.after(0, self.update_progress, 0)
+        # 0. Create folder for everything related to the model
+        # Specify the save directory for training runs
+        model_path = os.path.join(FOLDER_PATH, "yolo_model")
+        os.makedirs(model_path, exist_ok=True)
+
+        # Changing directory to the folder where the model should be saved
+        os.chdir(model_path)
+
+        self.root.after(0, self.update_progress, 20)
+        # 1. Set correct values in config.yaml
+        config_data = {
+            'train': os.path.join(FOLDER_PATH, "train"),
+            'val': os.path.join(FOLDER_PATH, "train"), # TODO: Change to val folder of course. Not Implemented.
+            'nc': len(CLASS_LIST),    
+            'names': CLASS_LIST,
+        }
+        path_to_yaml = os.path.join(model_path, "config.yaml")
+        with open(path_to_yaml, 'w') as file:
+            yaml.dump(config_data, file)
+
+
+        # TODO: Train existing model further if there exists one ? - or train new model (training new model is the default and only option for now)
+        
+        self.root.after(0, self.update_progress, 40)
+        # 2. Train the model
+        from ultralytics import YOLO
+        model = YOLO("yolov8n.pt")
+        slider_epochs_value = round(float(self.slider.get()))
+        print("Training for num epochs:", slider_epochs_value)
+        model.train(data="config.yaml", epochs=slider_epochs_value)  # train the model with specified number of epochs
+        #metrics = model.val()  # evaluate model performance on the validation set
+
+
+        self.root.after(0, self.update_progress, 60)
+        # 3. Open the results folder
+        folder_path = os.path.join(model_path, "runs")
+        show_folder(folder_path)
+
+        self.root.after(0, self.update_progress, 80)
+        # Going back to the original folder
+        os.chdir(FOLDER_PATH)
+
+        self.root.after(0, self.update_progress, 100)            
+        print("Done training")
+
+    def update_progress(self, value):
+        self.progress_bar["value"] = value
+
+    def next(self):
+        print("Finished training the model")
+
+        # Call the callback function if provided
+        if self.next_callback:
+            self.destroy()  # Destroy the widgets of the current window
+            self.next_callback()   # Show the next window
+
+    def destroy(self):
+        # Destroy all widgets in the current window
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+
+FOLDER_PATH = ""
+CLASS_LIST = []
+
 assemblies = []
 single_parts = []
 
@@ -451,10 +574,13 @@ def main():
         window2 = Window2(root, show_window3)
 
     def show_window3():
-        window3 = Window3(root, show_window1)
+        window3 = Window3(root, show_window4)
+
+    def show_window4():
+        window4 = Window4(root, show_window1)
 
     # Starting with Window 0. Setting folder for storing images and model.
-    show_window3()
+    show_window4()
 
     root.mainloop()
 
