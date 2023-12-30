@@ -345,7 +345,7 @@ class Window3:
         self.title = "Assembly detection"
 
         # Welcome Text
-        welcome_label = tk.Label(root, text="Preprocess images.")
+        welcome_label = tk.Label(root, text="Preprocess images. This may take a while.")
         welcome_label.pack(pady=10)
 
         self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
@@ -354,8 +354,8 @@ class Window3:
         self.progress_bar["value"] = 0
 
         # Create a button to start the loading
-        start_button = tk.Button(root, text="Start preprocessing", command=self.start_preprocessing_images)
-        start_button.pack(pady=10)
+        self.start_button = tk.Button(root, text="Start preprocessing", command=self.start_preprocessing_images)
+        self.start_button.pack(pady=10)
 
 
         # Finished Uploading Button
@@ -366,13 +366,16 @@ class Window3:
         self.next_callback = next_callback
 
     def start_preprocessing_images(self):
+        # Hide start button
+        self.start_button.pack_forget()
+        
         # Create a thread for the long-running task
         import threading
         loading_thread = threading.Thread(target=self.preprocess)
         loading_thread.start()
 
     def preprocess(self):
-        self.root.after(0, self.update_progress, 0)
+        self.root.after(0, self.update_progress, 10)
         # 1. Get bounding boxes for single-parts. Put label files into 'single-parts/labels' folder.
         from get_bboxes_single_parts import create_label_files
         global CLASS_LIST
@@ -401,7 +404,7 @@ class Window3:
         from augment_combined_images import augment_combined_folder
         combined_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
         NUM_OF_AUGMENTED_IMAGES = 2
-        IMAGE_FILE_EXTENSION = ".jpg"
+        IMAGE_FILE_EXTENSION = ".png"
         augment_combined_folder(combined_folder_path, NUM_OF_AUGMENTED_IMAGES, IMAGE_FILE_EXTENSION)
 
         self.root.after(0, self.update_progress, 80)
@@ -461,8 +464,8 @@ class Window4:
         self.progress_bar["value"] = 0
 
         # Create a button to start the loading
-        start_button = tk.Button(root, text="Start training", command=self.start_training)
-        start_button.pack(pady=10)
+        self.start_button = tk.Button(root, text="Start training", command=self.start_training)
+        self.start_button.pack(pady=10)
 
         # Open results folder
         open_results_button = tk.Button(root, text="Open results folder", command=self.show_results_folder)
@@ -481,6 +484,9 @@ class Window4:
         self.value_label.config(text=f"Selected Value: {rounded_value}")    
 
     def start_training(self):
+        # Hide start button
+        self.start_button.pack_forget()
+
         # Create a thread for the long-running task
         import threading
         loading_thread = threading.Thread(target=self.training)
@@ -594,15 +600,15 @@ class Window5:
         upload_button.pack(side=tk.TOP, pady=5)
 
         # Create a button to start the loading
-        start_button = tk.Button(root, text="Start predicting", command=self.predicting)
-        start_button.pack(pady=10)
+        self.start_button = tk.Button(root, text="Start predicting", command=self.predicting)
+        self.start_button.pack(pady=10)
 
         # Open results folder
         open_results_button = tk.Button(root, text="Open results folder", command=self.show_results_folder)
         open_results_button.pack(pady=10)
 
         # Finished Uploading Button
-        finish_button = tk.Button(root, text="Next step", command=self.next)
+        finish_button = tk.Button(root, text="Close application", command=self.next)
         finish_button.pack(side=tk.RIGHT, padx=5)
 
         # Callback for Next Window
@@ -610,7 +616,8 @@ class Window5:
 
     def select_model_pt(self):
         file_type = ("Model", "*.pt")
-        file_paths = filedialog.askopenfilenames(title=f"Select .pt file", filetypes=[file_type])
+        initial_dir = os.path.join(FOLDER_PATH, "yolo_model", "runs", "detect")
+        file_paths = filedialog.askopenfilenames(title=f"Select .pt file", filetypes=[file_type], initialdir=initial_dir)
         if file_paths == type(list) and len(file_paths) > 0:
             raise Exception("Only one .pt file can be selected.")
         # Update label
@@ -623,6 +630,9 @@ class Window5:
         self.folder_path_label.config(text="Selected folder: " + folder_path)
 
     def predicting(self):
+        # Hide the starting button
+        self.start_button.pack_forget()
+
         global FOLDER_PATH
         global CLASS_LIST
         FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test"
@@ -649,6 +659,7 @@ class Window5:
         #results = yolo(source_path)
         #print(results)
 
+        self.show_results_folder()
         os.chdir(FOLDER_PATH)
         print("Done predicting")
 
@@ -671,7 +682,7 @@ class Window5:
 
 FOLDER_PATH = ""
 CLASS_LIST = []
-IMAGE_FILE_EXTENSION = ".jpg"
+IMAGE_FILE_EXTENSION = ".png"
 
 assemblies = []
 single_parts = []
@@ -701,10 +712,14 @@ def main():
         window4 = Window4(root, show_window5)
 
     def show_window5():
-        window5 = Window5(root, show_window0)
+        window5 = Window5(root, end_application)
+
+    def end_application():
+        root.destroy()
+        print("Ended the application")
 
     # Starting with Window 0. Setting folder for storing images and model.
-    show_window4()
+    show_window5()
 
     root.mainloop()
 
