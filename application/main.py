@@ -601,11 +601,11 @@ class Window5:
 
         # Create a button to start the loading
         self.start_button = tk.Button(root, text="Start predicting", command=self.predicting)
-        self.start_button.pack(pady=10)
+        self.start_button.pack(pady=20)
 
         # Open results folder
         open_results_button = tk.Button(root, text="Open results folder", command=self.show_results_folder)
-        open_results_button.pack(pady=10)
+        open_results_button.pack(pady=[20, 0])
 
         # Finished Uploading Button
         finish_button = tk.Button(root, text="Close application", command=self.next)
@@ -616,6 +616,7 @@ class Window5:
 
     def select_model_pt(self):
         file_type = ("Model", "*.pt")
+        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test"
         initial_dir = os.path.join(FOLDER_PATH, "yolo_model", "runs", "detect")
         file_paths = filedialog.askopenfilenames(title=f"Select .pt file", filetypes=[file_type], initialdir=initial_dir)
         if file_paths == type(list) and len(file_paths) > 0:
