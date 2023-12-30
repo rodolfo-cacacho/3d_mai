@@ -10,7 +10,6 @@ import yaml # For editing config.yaml file
 
 def show_folder(folder_path):
         # Open the assembly folder, that the user should upload to Roboflow
-        folder_path = FOLDER_PATH + "/assembly-images"
         if platform.system() == "Windows":
             subprocess.run(["explorer", folder_path], shell=True)
         elif platform.system() == "Darwin":
@@ -295,7 +294,7 @@ class Window2:
         finish_button.pack(side=tk.RIGHT, padx=5)
 
         # File Types for Upload
-        self.file_types = [("Images", "*.jpg")]
+        self.file_types = [("Images", "*.jpg, *.png")]
 
         # Callback for Next Window
         self.next_callback = next_callback
@@ -397,13 +396,13 @@ class Window3:
         destination_path = os.path.join(FOLDER_PATH, "train")
         #CLASS_LIST = move_and_zoom(source_path, destination_path, CLASS_LIST) # TODO: Doesn't work yet...
 
-
         self.root.after(0, self.update_progress, 60)
         # 4. Add noise to 'combined-annotated/images' images. TODO: Export to train folder
         from augment_combined_images import augment_combined_folder
         combined_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
         NUM_OF_AUGMENTED_IMAGES = 2
-        augment_combined_folder(combined_folder_path, NUM_OF_AUGMENTED_IMAGES)
+        IMAGE_FILE_EXTENSION = ".jpg"
+        augment_combined_folder(combined_folder_path, NUM_OF_AUGMENTED_IMAGES, IMAGE_FILE_EXTENSION)
 
         self.root.after(0, self.update_progress, 80)
         # 5. Preprocess 'combined-annotated/images' images. # TODO: Export to train folder
@@ -465,6 +464,10 @@ class Window4:
         start_button = tk.Button(root, text="Start training", command=self.start_training)
         start_button.pack(pady=10)
 
+        # Open results folder
+        open_results_button = tk.Button(root, text="Open results folder", command=self.show_results_folder)
+        open_results_button.pack(pady=10)
+
         # Finished Uploading Button
         finish_button = tk.Button(root, text="Next step", command=self.next)
         finish_button.pack(side=tk.RIGHT, padx=5)
@@ -499,8 +502,8 @@ class Window4:
         self.root.after(0, self.update_progress, 20)
         # 1. Set correct values in config.yaml
         config_data = {
-            'train': os.path.join(FOLDER_PATH, "train"),
-            'val': os.path.join(FOLDER_PATH, "train"), # TODO: Change to val folder of course. Not Implemented.
+            'train': os.path.join(FOLDER_PATH, "combined-annotated"),
+            'val': os.path.join(FOLDER_PATH, "combined-annotated"), # TODO: Change to val folder of course. Not Implemented.
             'nc': len(CLASS_LIST),    
             'names': CLASS_LIST,
         }
@@ -533,6 +536,11 @@ class Window4:
         self.root.after(0, self.update_progress, 100)            
         print("Done training")
 
+    def show_results_folder(self):
+        # Open the results folder
+        folder_path = os.path.join(FOLDER_PATH, "yolo_model/runs")
+        show_folder(folder_path)
+
     def update_progress(self, value):
         self.progress_bar["value"] = value
 
@@ -550,8 +558,110 @@ class Window4:
             widget.destroy()
 
 
+class Window5:
+    """For inference/using the trained YOLO model on some test folder.
+    """
+    def __init__(self, root, next_callback=None):
+        self.root = root
+        self.title = "Assembly detection"
+
+        # Welcome Text
+        welcome_label = tk.Label(root, text="Inference. Select a folder to make predictions for.")
+        welcome_label.pack(pady=10)
+
+        # Select which trained model to use. 
+        self.model_path_label = tk.Label(root, text="Selected .pt file:")
+        self.model_path_label.pack(pady=10)
+        # Finished Uploading Button
+        upload_button = tk.Button(root, text="Select .pt file", command=self.select_model_pt)
+        upload_button.pack(side=tk.TOP, pady=5)
+
+        # Select folder for inference
+        self.folder_path_label = tk.Label(root, text="Selected folder:")
+        self.folder_path_label.pack(pady=10)
+        # Finished Uploading Button
+        upload_button = tk.Button(root, text="Select folder", command=self.select_folder)
+        upload_button.pack(side=tk.TOP, pady=5)
+
+        # Create a button to start the loading
+        start_button = tk.Button(root, text="Start predicting", command=self.predicting)
+        start_button.pack(pady=10)
+
+        # Open results folder
+        open_results_button = tk.Button(root, text="Open results folder", command=self.show_results_folder)
+        open_results_button.pack(pady=10)
+
+        # Finished Uploading Button
+        finish_button = tk.Button(root, text="Next step", command=self.next)
+        finish_button.pack(side=tk.RIGHT, padx=5)
+
+        # Callback for Next Window
+        self.next_callback = next_callback
+
+    def select_model_pt(self):
+        file_type = ("Model", "*.pt")
+        file_paths = filedialog.askopenfilenames(title=f"Select .pt file", filetypes=[file_type])
+        if file_paths == type(list) and len(file_paths) > 0:
+            raise Exception("Only one .pt file can be selected.")
+        # Update label
+        self.model_path_label.config(text="Selected .pt file: " + file_paths[0])
+
+    def select_folder(self):
+        # Open the native file dialog for selecting a folder
+        folder_path = filedialog.askdirectory(title="Select Folder to predict for")
+        # Update label
+        self.folder_path_label.config(text="Selected folder: " + folder_path)
+
+    def predicting(self):
+        global FOLDER_PATH
+        global CLASS_LIST
+        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test"
+        CLASS_LIST = ["asy_m4_nut_screw_10mm", "m4_20mm"]
+        os.chdir(os.path.join(FOLDER_PATH, "yolo_model"))
+
+        # Set correct values in config.yaml
+        yaml_path = os.path.join(FOLDER_PATH, "yolo_model/config.yaml")
+        with open(yaml_path, 'r') as file:
+            data = yaml.safe_load(file)
+        data["val"] = self.folder_path_label.cget("text").split(": ")[1]
+        data["nc"] = len(CLASS_LIST)
+        data["names"] = CLASS_LIST
+        with open(yaml_path, 'w') as file:
+            yaml.dump(data, file)
+
+        print("Starting predicting...")
+        # Predict
+        from ultralytics import YOLO
+        weights_path = self.model_path_label.cget("text").split(": ")[1]
+        print("weights_path:", weights_path)
+        yolo = YOLO(weights_path) #, imgsz=640)  # Adjust imgsz as needed
+        yolo.val(iou=0.75, conf=0.5)
+        #results = yolo(source_path)
+        #print(results)
+
+        os.chdir(FOLDER_PATH)
+        print("Done predicting")
+
+    def show_results_folder(self):
+        # Open the results folder
+        folder_path = os.path.join(FOLDER_PATH, "yolo_model/runs")
+        show_folder(folder_path)
+
+    def next(self):
+        # Call the callback function if provided
+        if self.next_callback:
+            self.destroy()  # Destroy the widgets of the current window
+            self.next_callback()   # Show the next window
+
+    def destroy(self):
+        # Destroy all widgets in the current window
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+
 FOLDER_PATH = ""
 CLASS_LIST = []
+IMAGE_FILE_EXTENSION = ".jpg"
 
 assemblies = []
 single_parts = []
@@ -562,7 +672,8 @@ def main():
 
     # TODO: Remove
     global FOLDER_PATH
-    FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test"
+    global CLASS_LIST
+    CLASS_LIST = ["asy_m4_nut_screw_10mm"] # TODO: I have to set it here manually until move_and_zoom works.
 
     def show_window0():
         window0 = Window0(root, show_window1)
@@ -577,10 +688,13 @@ def main():
         window3 = Window3(root, show_window4)
 
     def show_window4():
-        window4 = Window4(root, show_window1)
+        window4 = Window4(root, show_window5)
+
+    def show_window5():
+        window5 = Window5(root, show_window0)
 
     # Starting with Window 0. Setting folder for storing images and model.
-    show_window4()
+    show_window5()
 
     root.mainloop()
 

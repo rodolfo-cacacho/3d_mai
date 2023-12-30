@@ -1,12 +1,12 @@
 import random
 import shutil
 
-def augment_combined_folder(folder_path, num_of_augmented_images=1):
+def augment_combined_folder(folder_path, num_of_augmented_images=1, IMAGE_FILE_EXTENSION='.jpg'):
     images_folder = os.path.join(folder_path, "images")
     labels_folder = os.path.join(folder_path, "labels")
 
     # Augment images in images folder
-    files_paths = get_files_in_subdirectories(images_folder, file_extension=".png")
+    files_paths = get_files_in_subdirectories(images_folder, file_extension=IMAGE_FILE_EXTENSION)
     for file_path in files_paths:
         #print("augmenting...:", file_path)
         for i in range(num_of_augmented_images):

@@ -38,14 +38,6 @@ def preprocess_images(SOURCE_IMAGES_PATH, DESTINATION_IMAGES_PATH, TARGET_RESOLU
             if img.shape[1] / img.shape[0] != 16/9:
                 print("Image not 16:9!")
                 raise Exception("Image not 16:9!")
-            # TODO: Maybe remove the following. Expecting 800 x 450 images for now..
-            # TODO: We could also crop it, or just expect 16:9 and resize...
-            if img.shape[0] != TARGET_RESOLUTION[1]:
-                print("Image not 450px high!")
-                raise Exception("Image not 450px high!")
-            if img.shape[1] != TARGET_RESOLUTION[0]:
-                print("Image not 800px wide!")
-                raise Exception("Image not 800px wide!")
 
             # Detect the contours
             gray = cv2.bilateralFilter(img, 3, 5, 5)
@@ -67,7 +59,7 @@ def preprocess_images(SOURCE_IMAGES_PATH, DESTINATION_IMAGES_PATH, TARGET_RESOLU
                 #img = img[new_x_start:new_x_end, :]
 
             # resize the image to a fixed size. Resize AFTER detecting the edges
-            #img = cv2.resize(img, TARGET_RESOLUTION) # 800 x 450 = ratio of 1920 x 1080 downscaled
+            img = cv2.resize(img, TARGET_RESOLUTION) # 800 x 450 = ratio of 1920 x 1080 downscaled
         
             SAVING_PATH = os.path.join(DESTINATION_IMAGES_PATH, file)
             # Save preprocessed real image to folder
