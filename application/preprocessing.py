@@ -28,8 +28,8 @@ def preprocess_images(SOURCE_IMAGES_PATH, DESTINATION_IMAGES_PATH, TARGET_RESOLU
         for file in files:
             file_name = file.split(".")[0]
             image_name = os.path.join(subdir, file)
-            if image_name[-4:] != ".jpg":
-                print("Only .jpg files are allowed.")
+            if image_name[-4:] != ".png":
+                print("Only .png files are allowed.")
                 break
         
             img = cv2.imread(image_name)

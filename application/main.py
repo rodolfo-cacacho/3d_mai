@@ -130,7 +130,7 @@ class Window0:
             "single-parts", "single-parts/images", "single-parts/labels", 
             "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
             "preprocessed", "preprocessed/images", "preprocessed/labels",
-            "train", "train/images", "train/labels",
+            "test", "test/images", "test/predictions",
         ]
 
         for folder in folders:
@@ -519,7 +519,7 @@ class Window4:
         # 1. Set correct values in config.yaml
         config_data = {
             'train': os.path.join(FOLDER_PATH, "combined-annotated"),
-            'val': os.path.join(FOLDER_PATH, "combined-annotated"), # TODO: Change to val folder of course. Not Implemented.
+            'val': os.path.join(FOLDER_PATH, "test"),
             'nc': len(CLASS_LIST),    
             'names': CLASS_LIST,
         }
@@ -592,11 +592,10 @@ class Window5:
         upload_button = tk.Button(root, text="Select .pt file", command=self.select_model_pt)
         upload_button.pack(side=tk.TOP, pady=5)
 
-        # Select folder for inference
-        self.folder_path_label = tk.Label(root, text="Selected folder:")
-        self.folder_path_label.pack(pady=10)
-        # Finished Uploading Button
-        upload_button = tk.Button(root, text="Select folder", command=self.select_folder)
+        self.selected_images_label = tk.Label(root, text="Selected images:")
+        self.selected_images_label.pack(pady=10)
+        # Select files to predict on
+        upload_button = tk.Button(root, text="Select images", command=self.select_images_to_predict)
         upload_button.pack(side=tk.TOP, pady=5)
 
         # Create a button to start the loading
@@ -615,8 +614,9 @@ class Window5:
         self.next_callback = next_callback
 
     def select_model_pt(self):
+        global FOLDER_PATH
+
         file_type = ("Model", "*.pt")
-        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test"
         initial_dir = os.path.join(FOLDER_PATH, "yolo_model", "runs", "detect")
         file_paths = filedialog.askopenfilenames(title=f"Select .pt file", filetypes=[file_type], initialdir=initial_dir)
         if file_paths == type(list) and len(file_paths) > 0:
@@ -624,27 +624,37 @@ class Window5:
         # Update label
         self.model_path_label.config(text="Selected .pt file: " + file_paths[0])
 
-    def select_folder(self):
-        # Open the native file dialog for selecting a folder
-        folder_path = filedialog.askdirectory(title="Select Folder to predict for")
-        # Update label
-        self.folder_path_label.config(text="Selected folder: " + folder_path)
+    def select_images_to_predict(self):
+        global FOLDER_PATH
+
+        # Select images to predict on
+        file_types = [("Images", "*.jpg, *.png")]
+        file_paths = filedialog.askopenfilenames(title=f"Select images to predict", filetypes=file_types, initialdir=FOLDER_PATH)
+        # Display number of selected images
+        self.selected_images_label.config(text=f"Selected images: {len(file_paths)}")
+
+        # Copy images to test folder
+        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test" # TODO: REMOVE this!
+        test_folder_path = os.path.join(FOLDER_PATH, "test", "images")
+        for file_path in file_paths:
+            filename = file_path.split("/")[-1]
+            shutil.copy(file_path, os.path.join(test_folder_path, filename))
+
+        # Preprocess images in test/images folder
+        from preprocessing import preprocess_images
+        target_resolution = (800, 450)
+        preprocess_images(test_folder_path, test_folder_path, target_resolution)
 
     def predicting(self):
-        # Hide the starting button
-        self.start_button.pack_forget()
-
         global FOLDER_PATH
         global CLASS_LIST
-        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test"
-        CLASS_LIST = ["asy_m4_nut_screw_10mm", "m4_20mm"]
         os.chdir(os.path.join(FOLDER_PATH, "yolo_model"))
 
         # Set correct values in config.yaml
         yaml_path = os.path.join(FOLDER_PATH, "yolo_model/config.yaml")
         with open(yaml_path, 'r') as file:
             data = yaml.safe_load(file)
-        data["val"] = self.folder_path_label.cget("text").split(": ")[1]
+        data["val"] = os.path.join(FOLDER_PATH, "test")
         data["nc"] = len(CLASS_LIST)
         data["names"] = CLASS_LIST
         with open(yaml_path, 'w') as file:
@@ -656,9 +666,24 @@ class Window5:
         weights_path = self.model_path_label.cget("text").split(": ")[1]
         print("weights_path:", weights_path)
         yolo = YOLO(weights_path) #, imgsz=640)  # Adjust imgsz as needed
-        yolo.val(iou=0.75, conf=0.5)
+        #yolo.val(iou=0.75, conf=0.5)
+        source_path = os.path.join(FOLDER_PATH, "test/images")
         #results = yolo(source_path)
-        #print(results)
+
+        # Get all images in test/images folder
+        images_to_predict = os.listdir(source_path)
+
+        from PIL import Image
+        for image in images_to_predict:        
+            image_to_predict_path = os.path.join(source_path, image)
+            results = yolo(image_to_predict_path)  # results list
+            # Show the results
+            for r in results:
+                im_array = r.plot()  # plot a BGR numpy array of predictions
+                im = Image.fromarray(im_array[..., ::-1])  # RGB PIL image
+                im.show()  # show image
+                pred_save_path = os.path.join(FOLDER_PATH, "test/predictions", image)
+                im.save(pred_save_path)  # save image
 
         self.show_results_folder()
         os.chdir(FOLDER_PATH)
@@ -666,7 +691,7 @@ class Window5:
 
     def show_results_folder(self):
         # Open the results folder
-        folder_path = os.path.join(FOLDER_PATH, "yolo_model/runs/detect")
+        folder_path = os.path.join(FOLDER_PATH, "test", "predictions")
         show_folder(folder_path)
 
     def next(self):

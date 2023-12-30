@@ -154,7 +154,7 @@ def calculate_displaced_bbox(old_bbox,old_cords,new_cords,scale_factor,image_pat
 def move_and_zoom(input_folder, output_folder, CLASS_LIST):
     """Moves and zooms the objects in the images in the input folder and saves the results in the output folder.
     Note: Also append new classes to the CLASS_LIST here!"""
-    IMAGE_FILE_EXTENSION = '.jpg'
+    IMAGE_FILE_EXTENSION = '.png'
     TEXT_FILE_EXTENSION = '.txt'
     FILENAME_CLASS_SEPARATOR = '_ '
 

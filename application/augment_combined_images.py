@@ -1,7 +1,7 @@
 import random
 import shutil
 
-def augment_combined_folder(folder_path, num_of_augmented_images=1, IMAGE_FILE_EXTENSION='.jpg'):
+def augment_combined_folder(folder_path, num_of_augmented_images=1, IMAGE_FILE_EXTENSION='.png'):
     images_folder = os.path.join(folder_path, "images")
     labels_folder = os.path.join(folder_path, "labels")
 

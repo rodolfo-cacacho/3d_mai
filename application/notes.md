@@ -9,56 +9,19 @@ Goal:
 - THe GUI should guide the user through the workflow from start (3D CAD files) to finish (detection with camera).
 
 Workflow:
-1. Uploading 3D CAD files. (Somehow checkbox for assemblies?). Automatically rotate and create screenshots from that. Note: Probably need blender for that somehow. TODO: Ask Rodolfo.
+1. Uploading 3D CAD files. Automatically rotate and create screenshots from that.
 2. Manually label a few assemblies.
 3. Preprocessing:
     - Augmentation: Move + zoom. Also add noise as preprocessing step.
     - Preprocess the images. 16:9 images with at least 800x450. Contour detection.
 4. Train the model with these.
-5. Detection: Also preprocess the teting images and predict with YOLO.
-
-Next TO DO's:
-- Convert the .ipynb files to .py files containing the important python functions.
-- Build basic GUI that the user can interact with. GUI should call the python functions.
-- All of the images should be stored to folders on the device - kind of like how it's done right now.
-
-Basic GUI functions/views:
-- database should be easy folder structure
-- views:
-    - Upload 3D CAD files; Somehow label assemblies; Return/Download assembly images so user can upload it to roboflow
-        - Maybe two separate buttons. One for normal objects and one for assemblies.
-        - This has to automatically take the 2D screenshots from the different angles.
-        - Then the user should be able to download the assembly images. And upload them to roboflow.
-        - Some python folder magic has to be done here.
-    - User should then upload the annotated assemblies somehow
-        - Some python folder magic has to be done here.
-    - Then training view. Which somehow should display a progress/ estimated time to finish/ ...
-        - Do the preprocessing + show progress on how it's going
-        - This should run some test/ show which images/ how many images there are
-    - Then testing view. User should then upload testing images; GUI should display predictions somehow or export it somehow.
-    - User should also be able to upload an additional 3D CAD model - maybe user just has to retrain everything.
-
-State 27.12 to continue tommorow from:
-- window0: Select folder where everything should be stored to
-- window0: Setup correct folder structure and start with manually adding raw screenshots to there (some that I already have)
-- window1: Select assemblies and single parts 3D CAD files; TODO: Create 2D screenshots from that and save to correct folders. TODO: assemblies to assemblies folder and single parts to orginal images folder
-- window2: Download the assmbly images somehow to the Downloads folder. So that user can upload them easily to Roboflow for manual labeling.
-    - TODO: maybe download the images to Downloads folder and don't show actual folder. Let's see.
-- window2: Upload images and labels folders from Roboflow.
-- TODO: window3: Preprocessing (adding noise); ...
-- TODO: Create perfect training setup
-- TODO: Train model
-
-Preprocessing workflow:
-- Maybe TODO: Make sure images are 800x450
-- TODO: Find bounding boxes for single-parts (in labels folder) -> copy to combined-folder
-- TODO Check: Manually annotate and -> copy to combined folder
--> TODO: State: raw images and annotated labels in combined-folder
-- TODO: Add noise to all images in combined-folder
-- Integrate TODO: Preprocess (Detect contours) + Maybe resize to 800x450???? TODO
-- Finished. Train from here.
+5. Detection: Also preprocess the testing images and predict with YOLO.
 
 TODO:
 - Maybe I should store the manually annotated images somewhere, so they don't get lost. Right now I'm only storing the single-parts images and labels separately.
 
-TODO: Preprocess function in Window3
+
+TODO's open and important:
+    - Selecting testing folder, which then copies the images to a testing folder. Then the images have to be preprocessed - very important
+    - Creating 2D screenshots from 3D CAD
+    - And moving and zooming augmentation aren't done yet
