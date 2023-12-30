@@ -490,6 +490,16 @@ class Window4:
         global CLASS_LIST
         global FOLDER_PATH
 
+        # Look into images folder and extract all classes
+        images_folder_path = os.path.join(FOLDER_PATH, "combined-annotated/images")
+        found_images = os.listdir(images_folder_path)
+        found_classes = []
+        for image in found_images:
+            classname = image.split("_x")[0]
+            if classname not in found_classes:
+                found_classes.append(classname)
+        CLASS_LIST = found_classes
+
         self.root.after(0, self.update_progress, 0)
         # 0. Create folder for everything related to the model
         # Specify the save directory for training runs
@@ -526,7 +536,7 @@ class Window4:
 
         self.root.after(0, self.update_progress, 60)
         # 3. Open the results folder
-        folder_path = os.path.join(model_path, "runs")
+        folder_path = os.path.join(model_path, "runs/detect")
         show_folder(folder_path)
 
         self.root.after(0, self.update_progress, 80)
@@ -538,7 +548,7 @@ class Window4:
 
     def show_results_folder(self):
         # Open the results folder
-        folder_path = os.path.join(FOLDER_PATH, "yolo_model/runs")
+        folder_path = os.path.join(FOLDER_PATH, "yolo_model/runs/detect")
         show_folder(folder_path)
 
     def update_progress(self, value):
@@ -644,7 +654,7 @@ class Window5:
 
     def show_results_folder(self):
         # Open the results folder
-        folder_path = os.path.join(FOLDER_PATH, "yolo_model/runs")
+        folder_path = os.path.join(FOLDER_PATH, "yolo_model/runs/detect")
         show_folder(folder_path)
 
     def next(self):
@@ -694,7 +704,7 @@ def main():
         window5 = Window5(root, show_window0)
 
     # Starting with Window 0. Setting folder for storing images and model.
-    show_window5()
+    show_window4()
 
     root.mainloop()
 
