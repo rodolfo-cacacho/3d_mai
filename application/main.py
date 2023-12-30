@@ -634,7 +634,6 @@ class Window5:
         self.selected_images_label.config(text=f"Selected images: {len(file_paths)}")
 
         # Copy images to test folder
-        FOLDER_PATH = "/home/jetracer/Documents/3d_mai/application/test" # TODO: REMOVE this!
         test_folder_path = os.path.join(FOLDER_PATH, "test", "images")
         for file_path in file_paths:
             filename = file_path.split("/")[-1]
@@ -720,7 +719,9 @@ def main():
     # TODO: Remove
     global FOLDER_PATH
     global CLASS_LIST
-    CLASS_LIST = ["asy_m4_nut_screw_10mm"] # TODO: I have to set it here manually until move_and_zoom works.
+    
+    def start_application():
+        show_window0()
 
     def show_window0():
         window0 = Window0(root, show_window1)
@@ -744,8 +745,8 @@ def main():
         root.destroy()
         print("Ended the application")
 
-    # Starting with Window 0. Setting folder for storing images and model.
-    show_window5()
+    # Starting with Window 0.
+    start_application()
 
     root.mainloop()
 
