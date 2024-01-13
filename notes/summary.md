@@ -51,7 +51,7 @@ Of course we could use more training images, a bigger model and train it for lon
 
 
 ## Results 
-See 
+You can also find these in the results folder of the repository.
 ### Confusion matrix 
 ![confusion_matrix](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/88ec2bbf-e089-4b60-9bd3-be447fa61a1c)
 
