@@ -2,7 +2,7 @@
 Here we want to summarize the work, to have all of the information needed for writing the paper in one place.
 
 ## Architecture
-TODO: Insert Flowchart
+![Screenshot from 2024-01-13 12-20-50](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/9c568df2-0d13-467f-9b7f-220e34af60a7)
 
 The user can input 3D CAD files of objects. These objects can either be individual parts (like a screw, nut, ...) or an assembly (screw + nut). 
 
