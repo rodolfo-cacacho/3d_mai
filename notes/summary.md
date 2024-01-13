@@ -23,9 +23,6 @@ Inference/ prediction of real images:
 The goal of the project is to predict real objects in real images. To be able to predict the bounding boxes and classes of the objects in the real images, the real images have to be preprocessed, in order to look similar to the training images. The only preprocessing step needed in the contour-detection using the open-source package open-cv. The preprocessed images can then be used for prediction by the model.
 
 
-## Results 
-
-
 ## Big problems we had to solve
 ### Simulation to reality (Sim2Real) 
 We want to create the training images from 3D CAD files of the objects. Problem: The objects are perfect and don't have any defects, which is not the same when taking real images (which we want to classify at the end).
@@ -51,3 +48,15 @@ Talk a little bit about other branches of the Sim2Real reseach. For example to u
 We only used 4 different parts, for which we used around 3.000 training images to train the model.
 Furthermore we only used quite a small model. So it only took around one hour to train on CPU (with 2017 Macbook Pro).
 Of course we could use more training images, a bigger model and train it for longer. This would arguably result in a better model, but we haven't tried it out (TODO: Add some source here that underlines it).
+
+
+## Results 
+See 
+### Confusion matrix 
+![confusion_matrix](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/88ec2bbf-e089-4b60-9bd3-be447fa61a1c)
+
+### Training and validation Loss
+![results](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/14c91f1b-af4f-4663-b1eb-c215ad01f65d)
+
+### Precision-Recall curve
+![PR_curve](https://github.com/rodolfo-cacacho/3d_mai/assets/67323507/dadcc5ea-edb7-42e3-b320-60576cf319f7)
