@@ -48,7 +48,7 @@ if exists:
 
 # Defining the steps and range of angle values by which to rotate the point cloud.
 theta_range = np.linspace(-180, 180, 2)
-zoom_range  = np.linspace(25,45,3)
+zoom_range  = np.linspace(50,95,3)
 zoom_range_names = ['z1','z2','z3']
 # Set up the background
 #bpy.context.scene.world.use_nodes = True
@@ -56,6 +56,15 @@ zoom_range_names = ['z1','z2','z3']
 #bpy.context.space_data.shading.use_scene_world = False
 bg_node = bpy.context.scene.world.node_tree.nodes["Background"]
 bg_node.inputs[0].default_value = (1, 1, 1, 1)  # White background
+bpy.context.scene.render.film_transparent = True
+bpy.context.scene.view_settings.view_transform = 'Standard'
+bpy.context.scene.use_nodes = True
+bpy.ops.node.add_node(use_transform=True, type="CompositorNodeAlphaOver")
+bpy.data.scenes["Scene"].node_tree.nodes["Alpha Over"].premul = 1
+
+
+
+
 
 for i_file in files:
     
@@ -117,7 +126,7 @@ for i_file in files:
 
     bpy.ops.object.shade_smooth(use_auto_smooth=True)
     bpy.context.object.active_material.use_nodes = True
-    bpy.data.materials["met1"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0, 0, 0.471, 1)
+    bpy.data.materials["met1"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = (0.054, 0.051, 0.052, 1)
     bpy.data.materials["met1"].node_tree.nodes["Principled BSDF"].inputs[1].default_value = 0.95
     bpy.data.materials["met1"].node_tree.nodes["Principled BSDF"].inputs[2].default_value = 0.2
     bpy.data.materials["met1"].node_tree.nodes["Principled BSDF"].inputs[3].default_value = 1.45
@@ -141,7 +150,8 @@ for i_file in files:
         camera_location = (0, 0, zoom)  # Adjust as needed
         setup_camera(camera_location, camera_rotation, sensor_width, aspect_ratio)
         setup_lighting(camera_location,energy=zoom*0)
-    
+        if(index > 0 and 'asy' in name_part):
+            continue
         for anglex in range(steps): # X-axis
             setattr(obj.rotation_euler, 'x', math.radians(anglex * (360 / steps)))
             for angley in range(steps): #Y-axis
@@ -150,6 +160,7 @@ for i_file in files:
                     setattr(obj.rotation_euler, 'z', math.radians(anglez * (360 / steps)))
                     obj.location.x += 0  # You may need to adjust this if you want to keep the object at the same location
                     bpy.context.view_layer.update()
-                    filename = f"{name_part}_{x}-{anglex}_{y}-{angley}_{z}-{anglez}"
+                    filename = f"{name_part}_x-{anglex}_y-{angley}_z-{anglez}_z-{zoom_range_names[index]}oom"
                     bpy.context.scene.render.filepath = path_save + filename
                     bpy.ops.render.render(write_still=True)  
+                    
