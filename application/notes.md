@@ -22,6 +22,10 @@ TODO:
 
 
 TODO's open and important:
-    - Selecting testing folder, which then copies the images to a testing folder. Then the images have to be preprocessed - very important
+    - Selecting testing folder, which then copies the images to a testing folder. Then the images have to be preprocessed.
     - Creating 2D screenshots from 3D CAD
     - And moving and zooming augmentation aren't done yet
+
+TODO: Would be nice to have:
+- Change YOLOv8 preprocessing step, to automatically apply contour detection. Then the model could predict on the fly/from camera/ ... -> would be impressive.
+- Thread on how to do this: https://github.com/ultralytics/ultralytics/issues/3025
