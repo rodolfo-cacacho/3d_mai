@@ -36,7 +36,7 @@ data_path = parent_dir+'/data/'
 cad_path = data_path + 'cad-models-threads/'
 
 file_extension = '.stl'
-path_save = data_path+'train_threads_b/imagesO/'
+path_save = data_path+'test_threads/imagesO/'
 
 files = get_files_in_subdirectories(cad_path,file_extension)
 
@@ -58,12 +58,24 @@ bg_node = bpy.context.scene.world.node_tree.nodes["Background"]
 bg_node.inputs[0].default_value = (1, 1, 1, 1)  # White background
 bpy.context.scene.render.film_transparent = True
 bpy.context.scene.view_settings.view_transform = 'Standard'
+
+scene_t = bpy.context.scene
+comp_node_tree = scene_t.node_tree
 bpy.context.scene.use_nodes = True
-bpy.ops.node.add_node(use_transform=True, type="CompositorNodeAlphaOver")
-bpy.data.scenes["Scene"].node_tree.nodes["Alpha Over"].premul = 1
 
+bpy.context.scene.node_tree.nodes.clear()
 
+node_rl_layers = bpy.context.scene.node_tree.nodes.new("CompositorNodeRLayers")
 
+node_alpha_over = bpy.context.scene.node_tree.nodes.new("CompositorNodeAlphaOver")
+node_alpha_over.location.x = 300
+node_alpha_over.premul = 1
+
+node_composite = bpy.context.scene.node_tree.nodes.new("CompositorNodeComposite")
+node_composite.location.x = 550
+
+bpy.context.scene.node_tree.links.new(node_rl_layers.outputs['Image'], node_alpha_over.inputs[2])
+bpy.context.scene.node_tree.links.new(node_alpha_over.outputs['Image'], node_composite.inputs['Image'])
 
 
 for i_file in files:
