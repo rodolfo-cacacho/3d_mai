@@ -112,3 +112,446 @@ def coordinates_to_percentage(bbox_coordinates, image_width, image_height):
     rho = round(ho/image_height,4)
 
     return rxo,ryo,rwo,rho
+
+
+cwd = os.getcwd()
+parent_dir = os.path.dirname(cwd)
+data_path = parent_dir+'/data/'
+cad_path = data_path + 'cad-models-threads/'
+print(cad_path)
+file_extension = '.stl'
+path_save = data_path+'train_threads/imagesO/'
+print(path_save)
+files = get_files_in_subdirectories(cad_path,file_extension)
+
+cwd = os.getcwd()
+parent_dir = os.path.dirname(cwd)
+data_path = parent_dir+'/data/'
+cad_path = data_path + 'cad-models-threads/'
+print(cad_path)
+file_extension = '.stl'
+path_imgs = data_path+'train_threads_b/imagesO/'
+path_save = path_imgs.replace('imagesO','images')
+path_val_save = path_save.replace('train','val')
+labels_save = data_path+'train_threads_b/labels/'
+labels_val_save = data_path+'val_threads_b/labels/'
+path_save_bb = data_path+'train_threads_b/images_wbb/'
+print(path_save)
+files = get_files_in_subdirectories(cad_path,file_extension)
+val_save = ''
+
+exists_save = create_folder_if_not_exists(path_save)
+if exists_save:
+    images_del = get_files_in_subdirectories(path_save,'png')
+    for imdel in images_del:
+        delete_file(imdel)
+exists_lb = create_folder_if_not_exists(labels_save)
+if exists_lb:
+    images_del = get_files_in_subdirectories(labels_save,'txt')
+    for imdel in images_del:
+        delete_file(imdel)
+exists_wbb = create_folder_if_not_exists(path_save_bb)
+if exists_wbb:
+    images_del = get_files_in_subdirectories(path_save_bb,'png')
+    for imdel in images_del:
+        delete_file(imdel)
+
+images_move = get_files_in_subdirectories(path_imgs,'.png')
+unique_classes = []
+
+for index, jpg in enumerate(images_move):
+    filename = jpg.split('/')[-1].split('.')[0]
+    classname = filename.split('_x')[0]
+
+    # Load the image
+    image = cv2.imread(jpg)
+
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Apply Gaussian blur to reduce noise
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Perform edge detection
+    edges = cv2.Canny(blurred, 50, 150)
+
+    # Find contours in the edge-detected image
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Find the convex hull of the contours
+    convex_hull = cv2.convexHull(np.vstack(contours))
+
+    # Create a copy of the image for drawing the bounding box
+    result_image = image.copy()
+
+    # Calculate the bounding box of the convex hull
+    x, y, w, h = cv2.boundingRect(convex_hull)
+
+    image_width = image.shape[1]
+    image_height = image.shape[0] 
+
+    aratio = w/h
+    if aratio >= 1:
+        px = 1
+        py = int(1*aratio)
+    else:
+        px = int(1.0/aratio)
+        py = 1
+    x1 = x-px
+    y1 = y-py
+    x2 = x + w + px
+    y2 = y + h + py
+    wn = x2-x1
+    hn = y2-y1
+    w_reduce = 960
+    h_reduce = 500
+    # Calculate the maximum x and y coordinates for the new location
+    max_x = image_width - w - int(w_reduce/2)
+    max_y = image_height - h - int(h_reduce/2)
+
+    # Generate random x and y coordinates for the new location
+    new_x = np.random.randint(int(w_reduce/2), max_x + 1)
+    new_y = np.random.randint(int(h_reduce/2), max_y + 1)
+    if('asy' in classname):
+        new_x = x1
+        new_y = y1
+    # Extract the object
+    object_region = image[y1:y2, x1:x2].copy()
+
+    # Paste the object into the new random location
+    image[y1:y2, x1:x2] = [255, 255, 255]
+    image[new_y:new_y+hn, new_x:new_x+wn] = object_region
+
+    jpg_saving_path = jpg.replace("imagesO", "images")
+    cv2.imwrite(jpg_saving_path, image)
+    
+    # Create a copy of the image for drawing the bounding box
+    result_image = image.copy()
+
+    # Draw the bounding box on the result image
+    cv2.rectangle(result_image, (new_x, new_y), (new_x + wn, new_y + hn), (0, 255, 0), 2)
+    bounding_box_saving_path = jpg.replace("imagesO", "images_wbb")
+    cv2.imwrite(bounding_box_saving_path, result_image)
+
+    bbox_cord = [new_x,new_y,new_x+wn,new_y+hn]
+
+    relative_center_x, relative_center_y, relative_width, relative_height = coordinates_to_percentage(bbox_cord,image_width,image_height)
+
+    # Open a file for writing the results
+    
+    if classname not in unique_classes:
+        unique_classes.append(classname)
+    encoded_class = unique_classes.index(classname)
+    with open(labels_save + filename + '.txt', 'w') as file:
+        file.write(f"{encoded_class} {relative_center_x:.5f} {relative_center_y:.5f} {relative_width:.5f} {relative_height:.5f}")    
+
+unique_classes
+
+
+def convert_jpg_to_png(input_folder, output_folder):
+    # Create the output folder if it doesn't exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # Loop through all files in the input folder
+    for filename in os.listdir(input_folder):
+        if filename.endswith(".jpg"):
+            # Open the JPG image
+            jpg_path = os.path.join(input_folder, filename)
+            img = Image.open(jpg_path)
+
+            # Create the output PNG filename
+            png_filename = os.path.splitext(filename)[0] + ".png"
+            png_path = os.path.join(output_folder, png_filename)
+
+            # Save the image in PNG format
+            img.save(png_path, "PNG")
+            os.remove(jpg_path)
+
+            # print(f"Converted: {filename} -> {png_filename}")
+
+def clean_name(input_folder,output_folder):
+
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for filename in os.listdir(input_folder):
+        base_filename, file_extension = os.path.splitext(filename)
+        name = base_filename.split("oom_")[0]+'oom'
+        new_filename = name+file_extension
+        old_path = os.path.join(input_folder, filename)
+        new_path = os.path.join(output_folder, new_filename)
+        os.rename(old_path, new_path)
+
+def append_text_files(file1_path, file2_path):
+    try:
+        # Read the content of the second file
+        with open(file2_path, 'r') as file2:
+            content_to_append = '\n'+file2.read()
+
+        # Append the content to the first file
+        with open(file1_path, 'a') as file1:
+            file1.write(content_to_append)
+
+    except FileNotFoundError:
+        print(f"File not found: {file2_path}")
+
+
+
+def resize_and_place_object(image_path, original_bbox, scale_factor,future_path):
+
+    # Crop the region inside the original bounding box
+    x1, y1, x2, y2 = original_bbox
+    ow = x2-x1
+    oh = y2-y1
+    # print(f'{y1} {y2} {x1} {x2}')
+    w_reduce = 960
+    h_reduce = 500
+
+    original_image = cv2.imread(image_path)
+    object_region = original_image[y1:y2, x1:x2].copy()
+    new_w = int(scale_factor*(ow))
+    new_h = int(scale_factor*(oh))
+    if(scale_factor > 1 or scale_factor <1):
+        resized_object = cv2.resize(object_region, (new_w,new_h))
+    else:
+        resized_object = object_region.copy()
+
+    # print(f'h {new_h} w{new_w}')
+    # Paste the object into the new random location
+    original_image[y1:y2, x1:x2] = [255, 255, 255]
+
+    # Calculate the maximum x and y coordinates for the new location
+    max_x = original_image.shape[1] - new_w - int(w_reduce/2)
+    max_y = original_image.shape[0] - new_h - int(h_reduce/2)
+
+    # Generate random x and y coordinates for the new location
+    new_x = np.random.randint(int(w_reduce/2), max_x + 1)
+    new_y = np.random.randint(int(h_reduce/2), max_y + 1)
+    original_image[new_y:new_y+new_h, new_x:new_x+new_w] = resized_object
+    cv2.imwrite(future_path, original_image)
+
+    image_path_save = future_path.replace('images','images_wbb')
+    cv2.rectangle(original_image, (new_x, new_y), (new_w + new_x, new_h + new_y), (255, 0, 0), 2)
+    cv2.imwrite(image_path_save, original_image)
+
+    new_coords = [new_x,new_y]
+    new_bbox = [new_x,new_y,new_w + new_x, new_h + new_y]
+
+    return new_coords,new_bbox
+
+def calculate_displaced_bbox(old_bbox,old_cords,new_cords,scale_factor,image_path):
+
+    x1,y1,x2,y2 = old_bbox
+    w = x2 - x1
+    h = y2 - y1
+    ox = old_cords[0]
+    oy = old_cords[1]
+
+    nx = new_cords[0]
+    ny = new_cords[1]
+
+    dist_vert_x = (x1 - ox)*scale_factor
+    dist_vert_y = (y1 - oy)*scale_factor
+
+    vert_x = nx + dist_vert_x
+    vert_y = ny + dist_vert_y
+
+    end_x = vert_x + w*scale_factor
+    end_y = vert_y + h*scale_factor
+
+    displaced_bbox = [vert_x,vert_y,end_x,end_y]
+    displaced_bbox = [int(x) for x in displaced_bbox]
+    
+    image_path_save = image_path.replace('images','images_wbb')
+    original_image = cv2.imread(image_path_save)
+    cv2.rectangle(original_image, (int(vert_x), int(vert_y)), (int(end_x),int(end_y)), (0, 0, 255), 2)
+    cv2.imwrite(image_path_save, original_image)
+
+    return displaced_bbox
+
+input_folder = "/Users/rodolfocacacho/Documents/Documents/MAI/Project module/3d_mai/data/train_threads_b/Assembly 3d/train/images/"
+output_folder = "/Users/rodolfocacacho/Documents/Documents/MAI/Project module/3d_mai/data/train_threads_b/Assembly 3d/train/images2/"
+
+# Labels
+input_folder_l = "/Users/rodolfocacacho/Documents/Documents/MAI/Project module/3d_mai/data/train_threads_b/Assembly 3d/train/labels/"
+output_folder_l = "/Users/rodolfocacacho/Documents/Documents/MAI/Project module/3d_mai/data/train_threads_b/Assembly 3d/train/labels2/"
+
+# clean_name(input_folder, input_folder)
+# convert_jpg_to_png(input_folder, input_folder)
+# clean_name(input_folder_l, input_folder_l)
+
+
+
+asy_images = [file for file in images_move if 'asy' in file]
+len(asy_images)
+
+data_path_threads =  data_path+'train_threads_b/'
+path_assembly = data_path_threads + 'Assembly 3d/'
+path_config = path_assembly+'data.yaml'
+path_labels = 'Assembly 3d/train/labels/'
+
+# Load YAML file
+with open(path_config, 'r') as file:
+    data = yaml.safe_load(file)
+
+# Extract names from the YAML data
+names = data.get('names', [])
+# print(names)
+zoom_range = [1,0.69,0.52]
+zoom_names = ['z1oom','z2oom','z3oom']
+
+# Create a mapping dictionary for the first list
+mapping_dict = {value: index for index, value in enumerate(unique_classes)}
+
+
+for index_1,image in enumerate(asy_images):
+    print(image)
+    label_1 = image.replace('imagesO','labels').replace('png','txt')  # Replace with the actual path to your first file
+    label_2 = image.replace('imagesO',path_labels).replace('png','txt')  # Replace with the actual path to your second file
+    append_text_files(label_1, label_2)
+
+    original_image = Image.open(image)
+    w,h = original_image.size
+
+    # Read the content of the file and split it into lines
+    with open(label_1, 'r') as file:
+        lines = file.read().splitlines()
+
+    # Convert each line to a list of floats
+    bounding_boxes = [list(map(float, line.split())) for line in lines] # Labels
+
+    for index_zoom, zoom in enumerate(zoom_range):
+
+        result_bounding_boxes = []
+        for index_bbox,bbox_l in enumerate(bounding_boxes):
+            bbox_per = bbox_l[1:5]
+            bbox_per = [round(element,4) for element in bbox_per]
+            object_name = names[int(bbox_l[0])]
+            object = mapping_dict[object_name]
+            bbox = percentages_to_coordinates(bbox_per,w,h)
+            print(f'zoom: {zoom}x bbox {object_name} : bbox {bbox}')
+            # Zoom and move image
+            if(index_bbox == 0):
+                # print('zoom and move')
+                save_path_i = image.replace(zoom_names[0],zoom_names[index_zoom]).replace('imagesO','images')
+                # print(save_path_i)
+                new_position,new_bbox = resize_and_place_object(image, bbox, zoom,save_path_i)
+                # print(f'new cords: {new_position}')
+                new_bbox_l = [object, new_bbox]
+                result_bounding_boxes.append(new_bbox_l)
+                old_cords = [bbox[0],bbox[1]]
+
+            # Calculate new bounding boxes
+            else:
+                new_bbox = calculate_displaced_bbox(bbox,old_cords,new_position,zoom,save_path_i)
+                new_bbox_l = [object,new_bbox]
+                result_bounding_boxes.append(new_bbox_l)
+
+        print(f'result bbox{result_bounding_boxes}')
+        labels_path = image.replace('imagesO','labels').replace('png','txt').replace(zoom_names[0],zoom_names[index_zoom])
+        with open(labels_path, 'w') as output_file:
+            for index,item in enumerate(result_bounding_boxes):
+                object = item[0]
+                bbox = coordinates_to_percentage(item[1],1920,1080)
+                if(index == len(result_bounding_boxes)-1):
+                    line = f"{object} {bbox[0]:.5f} {bbox[1]:.5f} {bbox[2]:.5f} {bbox[3]:.5f}"
+                else:
+                    line = f"{object} {bbox[0]:.5f} {bbox[1]:.5f} {bbox[2]:.5f} {bbox[3]:.5f}\n"
+                output_file.write(line)
+
+
+unique_classes = ['dst4', 'm4_10mm', 'din125_m4', 'm4_20mm', 'asy_m4_nut_screw_10mm']
+
+def delete_and_create_folder(folder_path, subdirectories=None):
+    try:
+        # Check if the folder exists
+        if os.path.exists(folder_path):
+            # Delete existing folder and its contents
+            for root, dirs, files in os.walk(folder_path, topdown=False):
+                for file_name in files:
+                    file_path = os.path.join(root, file_name)
+                    os.remove(file_path)
+                for dir_name in dirs:
+                    dir_path = os.path.join(root, dir_name)
+                    os.rmdir(dir_path)
+            os.rmdir(folder_path)
+            # print(f"Existing folder '{folder_path}' deleted successfully.")
+
+        # Create a new empty folder
+        os.makedirs(folder_path)
+        # print(f"New empty folder '{folder_path}' created successfully.")
+
+        # Create subdirectories if specified
+        if subdirectories:
+            for subdirectory_info in subdirectories:
+                subdirectory_name = subdirectory_info["name"]
+                subdirectory_path = os.path.join(folder_path, subdirectory_name)
+                os.makedirs(subdirectory_path)
+                # print(f"Subdirectory '{subdirectory_path}' created.")
+
+                # Recursively create nested subdirectories
+                nested_subdirectories = subdirectory_info.get("subdirectories", [])
+                if nested_subdirectories:
+                    nested_path = subdirectory_path
+                    delete_and_create_folder(nested_path, nested_subdirectories)
+    except OSError as e:
+        print(f"Error: {folder_path} - {e.strerror}")
+
+def copy_file(source_file, destination_directory):
+    try:
+        # Ensure the destination directory exists
+        os.makedirs(destination_directory, exist_ok=True)
+
+        # Extract the file name from the source file path
+        file_name = os.path.basename(source_file)
+
+        # Create the destination file path
+        destination_file = os.path.join(destination_directory, file_name)
+
+        # Copy the file
+        with open(source_file, 'rb') as source, open(destination_file, 'wb') as destination:
+            destination.write(source.read())
+
+        print(f"File '{source_file}' copied to '{destination_file}' successfully.")
+    except IOError as e:
+        print(f"Error: {e}")
+
+
+
+data_path = parent_dir+'/data/'
+path_imgs = data_path+'train_threads_b/images/'
+images = get_files_in_subdirectories(path_imgs,'.png')
+path_train_val = data_path+'train_threads_b/object_train_val/'
+subdirs = ['train','validation']
+# Example usage with nested subdirectories
+subdirs = [
+    {"name": "train", "subdirectories": [{"name": "images"}, {"name": "labels"}]},
+    {"name": "validation", "subdirectories": [{"name": "images"}, {"name": "labels"}]}
+]
+delete_and_create_folder(path_train_val,subdirs)
+percentage_train = 80
+
+for index,class_obj in enumerate(unique_classes):
+    images_search = [file for file in images if class_obj in file]
+    train_val = create_binary_list(len(images_search),percentage_train)
+    train = 0
+    print(f'class {class_obj}')
+    for index_i,image in enumerate(images_search):
+        path_label = image.replace('images','labels').replace('png','txt')
+        if(train_val[index_i] == 1): #training
+            path_save_image = path_train_val+'train/images'
+            path_save_label = path_train_val+'train/labels'
+        else: # validation
+            path_save_image = path_train_val+'validation/images'
+            path_save_label = path_train_val+'validation/labels'
+        print(train_val[index_i])
+        print(image)
+        print(path_label)
+        print(path_save_image)
+        print(path_save_label)
+        copy_file(image, path_save_image)
+        copy_file(path_label, path_save_label)
+        train += train_val[index_i]
+    print(f'train i {train} percentage {100*train/len(images_search)}')
+        # print(f'test {train_val[index_i]} class: {class_obj} image: {image}')
