@@ -265,22 +265,23 @@ class Window1:
         global assemblies
         global single_parts
 
-        # MOVING ASSEMBLIES
+        # MOVING ASSEMBLIES to folder
         for i in assemblies:
             dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
             copy_file(i,dest_file_ass)
             print(i)
-        # MOVING SINGLE-PARTS 
+        # MOVING SINGLE-PARTS to folder
         for i in single_parts:
             dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
             copy_file(i,dest_file_ass)
             print(i)
-        # TODO: Create 2D screenshots from stl files.
+
         print("Creating images from 3D CAD files...")
-        # TODO: Save single_parts images to the correct folder
-        # TODO: Save assemblies images either to a folder or directly to Downloads folder somehow.
-        import time
-        time.sleep(2)
+        # Create 2D screenshots with blender
+        blender_script_path = 'blender_image_creation.py'
+        #blender_path = '/home/jetracer/Desktop/blender-4.0.2-linux-x64/blender'
+        blender_path = 'blender'
+        subprocess.run([blender_path, '--background', '--python', blender_script_path])
 
         self.next()
 
