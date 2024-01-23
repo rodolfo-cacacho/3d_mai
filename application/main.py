@@ -94,7 +94,7 @@ def copy_folder(source_folder, destination_folder):
 
 Creates the following folder structure:#
     - cad-files: For storing the 3D CAD files
-    - assembly-images: For storing the assembly images that the user has to manually annotate
+    - assemblies: For storing the assembly images that the user has to manually annotate
     - original-images: For storing all annotated images (assemblies and single parts)
     - preprocessed: For storing all preprocessed images
     - train: TODO
@@ -145,7 +145,7 @@ class Window0:
     def create_folder_structure(self):
         folders = [
             "cad-files","cad-files/assemblies","cad-files/single-parts",
-            "assembly-images","assembly-images/images","assembly-images/labels", # Only images
+            "assemblies","assemblies/images","assemblies/labels", # Only images
             "single-parts", "single-parts/images", "single-parts/labels", 
             "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
             "preprocessed", "preprocessed/images", "preprocessed/labels",
@@ -264,6 +264,7 @@ class Window1:
     def create_images(self):
         global assemblies
         global single_parts
+        global FOLDER_PATH
 
         # MOVING ASSEMBLIES to folder
         for i in assemblies:
@@ -281,7 +282,7 @@ class Window1:
         blender_script_path = 'blender_image_creation.py'
         #blender_path = '/home/jetracer/Desktop/blender-4.0.2-linux-x64/blender'
         blender_path = 'blender'
-        subprocess.run([blender_path, '--background', '--python', blender_script_path])
+        subprocess.run([blender_path, '--background', '--python', blender_script_path, FOLDER_PATH])
 
         self.next()
 
@@ -342,11 +343,11 @@ class Window2:
         # Callback for Next Window
         self.next_callback = next_callback
 
-    """TODO: Maybe just download the images to the downloads folder? And not the 'assembly-images' folder.
+    """TODO: Maybe just download the images to the downloads folder? And not the 'assemblies' folder.
     """
     def show_assembly_folder(self):
         # Open the assembly folder, that the user should upload to Roboflow
-        folder_path = FOLDER_PATH + "/assembly-images"
+        folder_path = FOLDER_PATH + "/assemblies"
         show_folder(folder_path)
 
     def upload_annotated(self):
