@@ -100,7 +100,7 @@ def copy_folder(source_folder, destination_folder):
 
 Creates the following folder structure:#
     - cad-files: For storing the 3D CAD files
-    - assembly-images: For storing the assembly images that the user has to manually annotate
+    - assemblies: For storing the assembly images that the user has to manually annotate
     - original-images: For storing all annotated images (assemblies and single parts)
     - preprocessed: For storing all preprocessed images
     - train: TODO
@@ -151,7 +151,7 @@ class Window0:
     def create_folder_structure(self):
         folders = [
             "cad-files","cad-files/assemblies","cad-files/single-parts",
-            "assembly-images","assembly-images/images","assembly-images/labels", # Only images
+            "assemblies","assemblies/images","assemblies/labels", # Only images
             "single-parts", "single-parts/images", "single-parts/labels", 
             "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
             "preprocessed", "preprocessed/images", "preprocessed/labels",
@@ -265,8 +265,9 @@ class Window1:
         global assemblies
         global single_parts
         global CLASS_LIST
+        global FOLDER_PATH
 
-        # MOVING ASSEMBLIES
+        # MOVING ASSEMBLIES to folder
         for i in assemblies:
             class_obj = get_class_obj(i.split("/")[-1])
             CLASS_LIST.append(class_obj)
@@ -274,6 +275,8 @@ class Window1:
             copy_file(i,dest_file_ass)
 
         # MOVING SINGLE-PARTS 
+            print(i)
+        # MOVING SINGLE-PARTS to folder
         for i in single_parts:
             class_obj = get_class_obj(i.split("/")[-1])
             CLASS_LIST.append(class_obj)
@@ -283,10 +286,11 @@ class Window1:
         print(f'Class list: {CLASS_LIST}')
         # TODO: Create 2D screenshots from stl files.
         print("Creating images from 3D CAD files...")
-        # TODO: Save single_parts images to the correct folder
-        # TODO: Save assemblies images either to a folder or directly to Downloads folder somehow.
-        import time
-        time.sleep(2)
+        # Create 2D screenshots with blender
+        blender_script_path = 'blender_image_creation.py'
+        #blender_path = '/home/jetracer/Desktop/blender-4.0.2-linux-x64/blender'
+        blender_path = 'blender'
+        subprocess.run([blender_path, '--background', '--python', blender_script_path, FOLDER_PATH])
 
         self.next()
 
@@ -347,7 +351,7 @@ class Window2:
         # Callback for Next Window
         self.next_callback = next_callback
 
-    """TODO: Maybe just download the images to the downloads folder? And not the 'assembly-images' folder.
+    """TODO: Maybe just download the images to the downloads folder? And not the 'assemblies' folder.
     """
     def show_assembly_folder(self):
         # Open the assembly folder, that the user should upload to Roboflow
