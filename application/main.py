@@ -8,6 +8,12 @@ import subprocess # For opening folder in file explorer
 import platform # For checking operating system
 import yaml # For editing config.yaml file
 
+def get_class_obj(file_name):
+    filename = file_name.split('/')[-1].split('.')[0]
+    classname = filename.split('_x')[0]
+
+    return classname
+
 def show_folder(folder_path):
         # Open the assembly folder, that the user should upload to Roboflow
         if platform.system() == "Windows":
@@ -34,7 +40,7 @@ def copy_file(source_file, destination_directory):
             with open(source_file, 'rb') as source, open(destination_file, 'wb') as destination:
                 destination.write(source.read())
 
-            print(f"File '{source_file}' copied to '{destination_file}' successfully.")
+            # print(f"File '{source_file}' copied to '{destination_file}' successfully.")
         except IOError as e:
             print(f"Error: {e}")
 
@@ -235,10 +241,6 @@ class Window1:
                 file_name = file_path.split("/")[-1]
                 self.assemblies_uploaded.insert(tk.END, file_name)
                 assemblies.append(file_path)
-                print(f'assemblies {file_path}')
-                ## MOVE ASSEMBLIES
-                dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
-                # copy_file(file_path,dest_file_ass)
 
     def upload_single_parts(self):
         # Open the native file dialog for uploading files
@@ -253,28 +255,32 @@ class Window1:
                 file_name = file_path.split("/")[-1]
                 self.single_parts_uploaded.insert(tk.END, file_name)
                 single_parts.append(file_path)
-                print(f'single {file_path}')
-                ## MOVE SINGLE PARTS
-                dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
-                # copy_file(file_path,dest_file_ass)
 
 
     """Creating images from 3D CAD files.
     """
     def create_images(self):
+        global assemblies_l
+        global single_parts_l
         global assemblies
         global single_parts
+        global CLASS_LIST
 
         # MOVING ASSEMBLIES
         for i in assemblies:
+            class_obj = get_class_obj(i.split("/")[-1])
+            CLASS_LIST.append(class_obj)
             dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
             copy_file(i,dest_file_ass)
-            print(i)
+
         # MOVING SINGLE-PARTS 
         for i in single_parts:
+            class_obj = get_class_obj(i.split("/")[-1])
+            CLASS_LIST.append(class_obj)
             dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
             copy_file(i,dest_file_ass)
-            print(i)
+
+        print(f'Class list: {CLASS_LIST}')
         # TODO: Create 2D screenshots from stl files.
         print("Creating images from 3D CAD files...")
         # TODO: Save single_parts images to the correct folder
@@ -345,7 +351,7 @@ class Window2:
     """
     def show_assembly_folder(self):
         # Open the assembly folder, that the user should upload to Roboflow
-        folder_path = FOLDER_PATH + "/assembly-images"
+        folder_path = FOLDER_PATH + "/assembly-images/images"
         show_folder(folder_path)
 
     def upload_annotated(self):
@@ -750,7 +756,8 @@ class Window5:
 FOLDER_PATH = ""
 CLASS_LIST = []
 IMAGE_FILE_EXTENSION = ".png"
-
+assemblies_l = []
+single_parts = []
 assemblies = []
 single_parts = []
 
