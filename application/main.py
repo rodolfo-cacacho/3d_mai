@@ -17,7 +17,26 @@ def show_folder(folder_path):
         elif platform.system() == "Linux":
             subprocess.run(["xdg-open", folder_path])
         else:
-            print("Unsupported operating system") 
+            print("Unsupported operating system")
+
+def copy_file(source_file, destination_directory):
+        try:
+            # Ensure the destination directory exists
+            os.makedirs(destination_directory, exist_ok=True)
+
+            # Extract the file name from the source file path
+            file_name = os.path.basename(source_file)
+
+            # Create the destination file path
+            destination_file = os.path.join(destination_directory, file_name)
+
+            # Copy the file
+            with open(source_file, 'rb') as source, open(destination_file, 'wb') as destination:
+                destination.write(source.read())
+
+            print(f"File '{source_file}' copied to '{destination_file}' successfully.")
+        except IOError as e:
+            print(f"Error: {e}")
 
 def copy_folder(source_folder, destination_folder):
     """For copying a folder to another folder
@@ -125,7 +144,7 @@ class Window0:
 
     def create_folder_structure(self):
         folders = [
-            "cad-files", 
+            "cad-files","cad-files/assemblies","cad-files/single-parts",
             "assembly-images","assembly-images/images","assembly-images/labels", # Only images
             "single-parts", "single-parts/images", "single-parts/labels", 
             "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
@@ -204,6 +223,7 @@ class Window1:
         self.next_callback = next_callback
 
     def upload_assemblies(self):
+        global FOLDER_PATH
         # Open the native file dialog for uploading files
         file_paths = filedialog.askopenfilenames(title=f"Select {self.file_types} files", filetypes=[(self.file_types[0], f"*.{self.file_types[1].lower()}")])
         if file_paths:
@@ -215,25 +235,10 @@ class Window1:
                 file_name = file_path.split("/")[-1]
                 self.assemblies_uploaded.insert(tk.END, file_name)
                 assemblies.append(file_path)
-
-    def copy_file(source_file, destination_directory):
-        try:
-            # Ensure the destination directory exists
-            os.makedirs(destination_directory, exist_ok=True)
-
-            # Extract the file name from the source file path
-            file_name = os.path.basename(source_file)
-
-            # Create the destination file path
-            destination_file = os.path.join(destination_directory, file_name)
-
-            # Copy the file
-            with open(source_file, 'rb') as source, open(destination_file, 'wb') as destination:
-                destination.write(source.read())
-
-            print(f"File '{source_file}' copied to '{destination_file}' successfully.")
-        except IOError as e:
-            print(f"Error: {e}")
+                print(f'assemblies {file_path}')
+                ## MOVE ASSEMBLIES
+                dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
+                # copy_file(file_path,dest_file_ass)
 
     def upload_single_parts(self):
         # Open the native file dialog for uploading files
@@ -248,11 +253,28 @@ class Window1:
                 file_name = file_path.split("/")[-1]
                 self.single_parts_uploaded.insert(tk.END, file_name)
                 single_parts.append(file_path)
+                print(f'single {file_path}')
+                ## MOVE SINGLE PARTS
+                dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
+                # copy_file(file_path,dest_file_ass)
 
 
     """Creating images from 3D CAD files.
     """
     def create_images(self):
+        global assemblies
+        global single_parts
+
+        # MOVING ASSEMBLIES
+        for i in assemblies:
+            dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
+            copy_file(i,dest_file_ass)
+            print(i)
+        # MOVING SINGLE-PARTS 
+        for i in single_parts:
+            dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
+            copy_file(i,dest_file_ass)
+            print(i)
         # TODO: Create 2D screenshots from stl files.
         print("Creating images from 3D CAD files...")
         # TODO: Save single_parts images to the correct folder
