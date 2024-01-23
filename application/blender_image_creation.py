@@ -3,7 +3,9 @@ import sys
 import os
 import numpy as np
 import math
-
+import random
+import copy
+import re
 
 
 
@@ -172,13 +174,6 @@ def set_background():
     bpy.context.scene.world.use_nodes = True
     bg_node = bpy.context.scene.world.node_tree.nodes["Background"]
     bg_node.inputs[0].default_value = (1, 1, 1, 1)  # White background
-
-
-### FUNCTION READ FILES
-import copy
-import os
-import re
-import bpy
 
 def get_subdirectories(folder_path):
     subdirectories = []
