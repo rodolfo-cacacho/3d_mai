@@ -126,7 +126,7 @@ class Window0:
     def create_folder_structure(self):
         folders = [
             "cad-files", 
-            "assembly-images", # Only images
+            "assembly-images","assembly-images/images","assembly-images/labels", # Only images
             "single-parts", "single-parts/images", "single-parts/labels", 
             "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
             "preprocessed", "preprocessed/images", "preprocessed/labels",
@@ -216,6 +216,25 @@ class Window1:
                 self.assemblies_uploaded.insert(tk.END, file_name)
                 assemblies.append(file_path)
 
+    def copy_file(source_file, destination_directory):
+        try:
+            # Ensure the destination directory exists
+            os.makedirs(destination_directory, exist_ok=True)
+
+            # Extract the file name from the source file path
+            file_name = os.path.basename(source_file)
+
+            # Create the destination file path
+            destination_file = os.path.join(destination_directory, file_name)
+
+            # Copy the file
+            with open(source_file, 'rb') as source, open(destination_file, 'wb') as destination:
+                destination.write(source.read())
+
+            print(f"File '{source_file}' copied to '{destination_file}' successfully.")
+        except IOError as e:
+            print(f"Error: {e}")
+
     def upload_single_parts(self):
         # Open the native file dialog for uploading files
         file_paths = filedialog.askopenfilenames(title=f"Select {self.file_types} files", filetypes=[(self.file_types[0], f"*.{self.file_types[1].lower()}")])
@@ -229,6 +248,7 @@ class Window1:
                 file_name = file_path.split("/")[-1]
                 self.single_parts_uploaded.insert(tk.END, file_name)
                 single_parts.append(file_path)
+
 
     """Creating images from 3D CAD files.
     """
