@@ -1,9 +1,0 @@
-﻿"Symbol";"Value";"Unit";
-"TraceParts.PartNumber";"10-24032020-108649";"";
-"REFERENCE";"DST4";"";
-"TraceParts.PartTitle";"ROD NUT - STEEL - M4";"";
-"TraceParts.InstanceId";"10-24032020-1086499J42YM8YSJ7EFRBNE2I21C9VN";"";
-"SUPPLIER";"WAIRCOM";"";
-"DESIGN";"ROD NUT - STEEL - M4";"";
-"TraceParts.PartVersion";"1.0.2";"";
-"TraceParts.PartLanguage";"en";"";
