@@ -14,6 +14,19 @@ def get_class_obj(file_name):
 
     return classname
 
+def clean_name(input_folder,output_folder):
+
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for filename in os.listdir(input_folder):
+        base_filename, file_extension = os.path.splitext(filename)
+        name = base_filename.split("oom_")[0]+'oom'
+        new_filename = name+file_extension
+        old_path = os.path.join(input_folder, filename)
+        new_path = os.path.join(output_folder, new_filename)
+        os.rename(old_path, new_path)
+
 def show_folder(folder_path):
         # Open the assembly folder, that the user should upload to Roboflow
         if platform.system() == "Windows":
@@ -95,6 +108,54 @@ def copy_folder(source_folder, destination_folder):
     
     return num_images, num_labels
 
+def find_labels_folder(folder_path):
+    # Check if the given path is a directory
+    if not os.path.isdir(folder_path):
+        raise ValueError("Invalid folder path")
+
+    # Function to recursively search for the 'labels' subfolder
+    def search_for_labels(current_folder):
+        for root, dirs, files in os.walk(current_folder):
+            if 'labels' in dirs:
+                return os.path.join(root, 'labels')
+        
+        return None
+
+    return search_for_labels(folder_path)
+
+def copy_label_files_from_rf(source_folder,dest_folder):
+
+    labels_folder = find_labels_folder(source_folder)
+    source_labels = os.listdir(labels_folder)
+    num_labels = len(source_labels)
+    dest_folder_labels = os.path.join(dest_folder,'labels_rb')
+    for file in source_labels:
+        source_file_path = os.path.join(labels_folder, file)
+        destination_file_path = os.path.join(dest_folder_labels, file)
+        try:
+            shutil.copy(source_file_path, destination_file_path)
+        except shutil.Error as e:
+            print(f"Error copying file: {e}")
+            num_labels -= 1
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            num_labels -= 1
+
+    yaml_files = [f for f in os.listdir(source_folder) if f.endswith('.yaml')]
+
+    if len(yaml_files) == 1:
+        #DO COPY
+        yaml_files_src = [os.path.join(source_folder, file) for file in yaml_files]
+        yaml_files_dest = [os.path.join(dest_folder, file) for file in yaml_files]
+        shutil.copy(yaml_files_src[0], yaml_files_dest[0])
+        yaml_copied = 1
+    elif len(yaml_files) == 0:
+        yaml_copied = 0
+    else:
+        yaml_copied = 2
+
+    return num_labels,yaml_copied
+
 
 """For selecting folder where all the images and model should be stored on local machine
 
@@ -109,6 +170,7 @@ class Window0:
     def __init__(self, root, next_callback=None):
         self.root = root
         self.title = "Assembly detection"
+        print(f'cwd: {os.getcwd()}')
 
         # Select folder for storing everything
         welcome_label = tk.Label(root, text="Select folder where to store everything about this model (Images, model, ...).")
@@ -151,10 +213,10 @@ class Window0:
     def create_folder_structure(self):
         folders = [
             "cad-files","cad-files/assemblies","cad-files/single-parts",
-            "assemblies","assemblies/images","assemblies/labels", # Only images
-            "single-parts", "single-parts/images", "single-parts/labels", 
+            "assemblies","assemblies/images","assemblies/labels","assemblies/labels_rb", # Only images
+            "single-parts", "single-parts/images", 
             "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
-            "preprocessed", "preprocessed/images", "preprocessed/labels",
+            "images_w_bounding_boxes", "images_w_bounding_boxes/single-parts", "images_w_bounding_boxes/assemblies",
             "test", "test/images", "test/predictions",
         ]
 
@@ -260,8 +322,8 @@ class Window1:
     """Creating images from 3D CAD files.
     """
     def create_images(self):
-        global assemblies_l
-        global single_parts_l
+        global ASSEMBLIES_LIST
+        global SINGLE_PARTS_LIST
         global assemblies
         global single_parts
         global CLASS_LIST
@@ -271,15 +333,15 @@ class Window1:
         for i in assemblies:
             class_obj = get_class_obj(i.split("/")[-1])
             CLASS_LIST.append(class_obj)
+            ASSEMBLIES_LIST.append(class_obj)
             dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
             copy_file(i,dest_file_ass)
 
-        # MOVING SINGLE-PARTS 
-            print(i)
         # MOVING SINGLE-PARTS to folder
         for i in single_parts:
             class_obj = get_class_obj(i.split("/")[-1])
             CLASS_LIST.append(class_obj)
+            SINGLE_PARTS_LIST.append(class_obj)
             dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
             copy_file(i,dest_file_ass)
 
@@ -334,8 +396,8 @@ class Window2:
         download_assemblies_button.pack(side=tk.TOP, pady=5)
 
         # Files uploaded label
-        self.images_uploaded_label = tk.Label(root, text="Images uploaded: 0")
-        self.images_uploaded_label.pack(pady=[10, 0])
+        self.yaml_uploaded_label = tk.Label(root, text="YAML file uploaded: ")
+        self.yaml_uploaded_label.pack(pady=[10, 0])
 
         self.labels_uploaded_label = tk.Label(root, text="Labels uploaded: 0")
         self.labels_uploaded_label.pack(pady=[0, 10])
@@ -355,7 +417,7 @@ class Window2:
     """
     def show_assembly_folder(self):
         # Open the assembly folder, that the user should upload to Roboflow
-        folder_path = FOLDER_PATH + "/assembly-images/images"
+        folder_path = FOLDER_PATH + "/assemblies/images"
         show_folder(folder_path)
 
     def upload_annotated(self):
@@ -364,12 +426,22 @@ class Window2:
 
         # Then copy image and labels files to the 'combined-annotated' folder
         source_folder_path = folder_path
-        destination_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
-        num_images, num_labels = copy_folder(source_folder_path, destination_folder_path)
+        destination_folder_labels = os.path.join(FOLDER_PATH, "assemblies")
+        
+        num_labels,yaml_uploaded = copy_label_files_from_rf(source_folder_path, destination_folder_labels)
+        print(f'yaml - {yaml_uploaded}')
 
         # Update labels
-        self.images_uploaded_label.config(text=f"Images uploaded: {num_images}")
+        if yaml_uploaded == 1:
+            test_yaml = 'Done'
+        elif yaml_uploaded == 0:
+            test_yaml = 'Not found'
+        else:
+            test_yaml = 'Not copied - Multiple YAML files founded'
+
+
         self.labels_uploaded_label.config(text=f"Labels uploaded: {num_labels}")
+        self.yaml_uploaded_label.config(text=f"Labels uploaded: {test_yaml}")
 
 
     def next(self):
@@ -432,24 +504,41 @@ class Window3:
         from get_bboxes_single_parts import create_label_files
         global CLASS_LIST
         global FOLDER_PATH
+        global ASSEMBLIES_LIST
 
+        ## BOUNDING BOXES AND MOVING SINGLE PARTS
+        bbox_path = os.path.join(FOLDER_PATH,'images_w_bounding_boxes')
         images_path = os.path.join(FOLDER_PATH, "single-parts/images")
         labels_path = os.path.join(FOLDER_PATH, "single-parts/labels")
-        CLASS_LIST = create_label_files(images_path, labels_path, CLASS_LIST)
+        cl = create_label_files(images_path, labels_path, CLASS_LIST, ASSEMBLIES_LIST,bbox_path)
+        print(f'cl updates single parts {cl}')
 
-        self.root.after(0, self.update_progress, 20)
+        self.root.after(0, self.update_progress, 15)
         # 2. Add single parts folder to 'combined-annotated' folder.
-        source_folder_path = os.path.join(FOLDER_PATH, "single-parts")
-        destination_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
-        _, _ = copy_folder(source_folder_path, destination_folder_path)
+        # source_folder_path = os.path.join(FOLDER_PATH, "single-parts")
+        # destination_folder_path = os.path.join(FOLDER_PATH, "combined-annotated")
+        # _, _ = copy_folder(source_folder_path, destination_folder_path)
 
+        ## BOUNDING BOXES ASSEMBLIES
+        images_path = os.path.join(FOLDER_PATH, "assemblies/images")
+        labels_path = os.path.join(FOLDER_PATH, "assemblies/labels")
+        cl = create_label_files(images_path, labels_path, CLASS_LIST, ASSEMBLIES_LIST,bbox_path)
+        print(f'cl updates assemblies {cl}')
+        
+        self.root.after(0, self.update_progress, 30)
+
+        labels_path = os.path.join(FOLDER_PATH, "assemblies/labels_rb")
+        clean_name(labels_path,labels_path)
         self.root.after(0, self.update_progress, 40)
+        print('Cleaned names of labels')
+
         # 3. Move + zoom of 'combined-annotated/images' images. Export to train folder.
         # TODO: Implement
-        #from augment_move_and_zoom import move_and_zoom
-        source_path = os.path.join(FOLDER_PATH, "combined-annotated")
-        destination_path = os.path.join(FOLDER_PATH, "train")
-        #CLASS_LIST = move_and_zoom(source_path, destination_path, CLASS_LIST) # TODO: Doesn't work yet...
+        from get_bboxes_single_parts import combine_move_zoom
+        results_path = os.path.join(FOLDER_PATH, "combined-annotated")
+
+        images_path = os.path.join(FOLDER_PATH, "assemblies")
+        CLASS_LIST = combine_move_zoom(images_path,results_path,bbox_path,CLASS_LIST,ASSEMBLIES_LIST) # TODO: Doesn't work yet...
 
         self.root.after(0, self.update_progress, 60)
         # 4. Add noise to 'combined-annotated/images' images. TODO: Export to train folder
@@ -760,7 +849,8 @@ class Window5:
 FOLDER_PATH = ""
 CLASS_LIST = []
 IMAGE_FILE_EXTENSION = ".png"
-assemblies_l = []
+ASSEMBLIES_LIST = []
+SINGLE_PARTS_LIST = []
 single_parts = []
 assemblies = []
 single_parts = []

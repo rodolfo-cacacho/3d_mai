@@ -262,4 +262,7 @@ extension = '*.stl'
 search_pattern = f'{assemblies_path}/{extension}'
 assemblies_stl_files = glob.glob(search_pattern)
 
+
+print(f'single parts: {single_parts_stl_files} ass parts: {assemblies_stl_files}')
+print(f'folder path: {folder_path}')
 create_screenshots(single_parts_stl_files, assemblies_stl_files, folder_path)
