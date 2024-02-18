@@ -185,11 +185,12 @@ class Window0:
         upload_button.pack(side=tk.TOP, pady=5)
 
         # Next Button
-        finish_button = tk.Button(root, text="Next step", command=self.next)
-        finish_button.pack(side=tk.TOP, pady=5)
+        self.finish_button = tk.Button(root, text="Next step",state='disabled', command=self.next)
+        self.finish_button.pack(side=tk.TOP, pady=5)
 
         # Callback for Next Window
         self.next_callback = next_callback
+
 
     def select_folder(self):
         # Open the native file dialog for selecting a folder
@@ -201,16 +202,9 @@ class Window0:
 
         # Update label
         self.folder_path_label.config(text="Selected folder:" + FOLDER_PATH)
+        self.finish_button.config(state="normal")
 
     def next(self):
-        self.create_folder_structure()
-
-        # Call the callback function if provided
-        if self.next_callback:
-            self.destroy()  # Destroy the widgets of the current window
-            self.next_callback()   # Show the next window
-
-    def create_folder_structure(self):
         folders = [
             "cad-files","cad-files/assemblies","cad-files/single-parts",
             "assemblies","assemblies/images","assemblies/labels","assemblies/labels_rb", # Only images
@@ -219,6 +213,27 @@ class Window0:
             "images_w_bounding_boxes", "images_w_bounding_boxes/single-parts", "images_w_bounding_boxes/assemblies",
             "test", "test/images", "test/predictions",
         ]
+        # verify_structure = self.verify_created_structure(folders)
+        # if verify_structure == False:
+        self.create_folder_structure(folders)
+
+        # Call the callback function if provided
+        if self.next_callback:
+            self.destroy()  # Destroy the widgets of the current window
+            self.next_callback()   # Show the next window
+
+    def verify_created_structure(self,folders):
+    
+        complete = True
+        for folder in folders:
+            folder_path = os.path.join(FOLDER_PATH,folder)
+            completet = os.path.exists(folder_path)
+            if completet == False:
+                complete = False
+                break
+        return complete
+
+    def create_folder_structure(self,folders):
 
         for folder in folders:
             folder_path = os.path.join(FOLDER_PATH, folder)
@@ -227,19 +242,25 @@ class Window0:
             if os.path.exists(folder_path):
                 # List files in the folder
                 files = os.listdir(folder_path)
-
-                if files:
+                for j in files:
+                    print(f'paths {os.path.join(folder,j)} in {str(os.path.join(folder,j) in folders)}')
+                fl = [item for item in files if str(os.path.join(folder,item)) not in folders]
+                print(files)
+                print(fl)
+                if fl:
                     print(f"There are files in {folder_path}")
-
-                    # Ask for confirmation using a Tkinter popup
-                    confirmation = messagebox.askyesno("Confirmation", f"Do you want to delete all files in {folder_path}?")
-
+                    confirmation = messagebox.askyesno("Confirmation", f"Do you want to delete all files in {folder}?")
+                    # Delete all files in the folder
                     if confirmation:
-                        # Delete all files in the folder
-                        for file in files:
+                        for file in fl:
                             file_path = os.path.join(folder_path, file)
-                            os.remove(file_path)
-                        print(f"All files in {folder_path} deleted.")
+                            if os.path.isfile(file_path):
+                                os.remove(file_path)
+                            elif len(os.listdir(file_path)) > 0:
+                                shutil.rmtree(file_path)
+                            else:
+                                os.rmdir(file_path)
+                            print(f"All files in {folder_path} deleted.")
             else:
                 os.makedirs(folder_path, exist_ok=True)
                 print(f"{folder_path} created.")
@@ -264,6 +285,10 @@ class Window1:
         welcome_label = tk.Label(root, text="Upload 3D CAD objects. Assemblies and single parts.")
         welcome_label.pack(pady=10)
 
+        aparts,spparts = self.load_files()
+        print(f'assemblies {aparts}')
+        print(f'single parts {spparts}')
+
         # Assemblies Upload List
         assemblies_uploaded_label = tk.Label(root, text="Assemblies uploaded")
         assemblies_uploaded_label.pack(pady=[10, 0])
@@ -271,6 +296,12 @@ class Window1:
         self.assemblies_uploaded.pack(pady=0)
         upload_button = tk.Button(root, text="Upload assemblies", command=self.upload_assemblies)
         upload_button.pack(side=tk.TOP, pady=5)
+
+        for file_path in aparts:
+            file_name = file_path[0]
+            print(file_name)
+            self.assemblies_uploaded.insert(tk.END, file_name)
+            assemblies.append(file_path)
 
         # Single parts Upload List
         single_parts_uploaded_label = tk.Label(root, text="Single parts uploaded")
@@ -280,9 +311,20 @@ class Window1:
         single_parts_upload_button = tk.Button(root, text="Upload single parts", command=self.upload_single_parts)
         single_parts_upload_button.pack(side=tk.TOP, pady=5)
 
+        for file_path in spparts:
+            file_name = file_path[0]
+            self.single_parts_uploaded.insert(tk.END, file_name)
+            single_parts.append(file_path)
+
+        if len(spparts) > 0 and len(aparts) > 0:
+            state_next = 'active'
+        else:
+            state_next = 'disabled'
+
         # Finished Uploading Button
-        finish_button = tk.Button(root, text="Next step", command=self.create_images)
+        finish_button = tk.Button(root, text="Next step",state=state_next, command=self.create_images)
         finish_button.pack(side=tk.TOP, pady=5)
+
 
         # File Types for Upload
         self.file_types = ("3D CAD parts", "stl")
@@ -290,33 +332,53 @@ class Window1:
         # Callback for Next Window
         self.next_callback = next_callback
 
+    def load_files(self):
+        a_path = os.path.join(FOLDER_PATH,'cad-files','assemblies')
+        sp_path = os.path.join(FOLDER_PATH,'cad-files','single-parts')
+        assemlies_parts_detected = os.listdir(a_path)
+        single_parts_detected = os.listdir(sp_path)
+        assemlies_parts_detected = [file for file in assemlies_parts_detected if file.endswith('.stl')]
+        assemlies_parts_detected = [[item, True] for item in assemlies_parts_detected]
+        single_parts_detected = [file for file in single_parts_detected if file.endswith('.stl')]
+        single_parts_detected = [[item, True] for item in single_parts_detected]
+        return assemlies_parts_detected,single_parts_detected
+
     def upload_assemblies(self):
         global FOLDER_PATH
         # Open the native file dialog for uploading files
         file_paths = filedialog.askopenfilenames(title=f"Select {self.file_types} files", filetypes=[(self.file_types[0], f"*.{self.file_types[1].lower()}")])
         if file_paths:
             # Clear existing items in the list
-            self.assemblies_uploaded.delete(0, tk.END)
+            # self.assemblies_uploaded.delete(0, tk.END)
 
             # Display selected file names in the list
             for file_path in file_paths:
                 file_name = file_path.split("/")[-1]
                 self.assemblies_uploaded.insert(tk.END, file_name)
-                assemblies.append(file_path)
+                asst = []
+                asst.append(file_path,False)
+                assemblies.append(asst)
+
+        if(len(assemblies) > 0 and len(single_parts) > 0):
+            self.finish_button.config(state = 'normal')
 
     def upload_single_parts(self):
         # Open the native file dialog for uploading files
         file_paths = filedialog.askopenfilenames(title=f"Select {self.file_types} files", filetypes=[(self.file_types[0], f"*.{self.file_types[1].lower()}")])
         if file_paths:
             # Clear existing items in the list
-            self.single_parts_uploaded.delete(0, tk.END)
+            # self.single_parts_uploaded.delete(0, tk.END)
 
             # Display selected file names in the list
             for file_path in file_paths:
                 # Add the file path to the list
                 file_name = file_path.split("/")[-1]
                 self.single_parts_uploaded.insert(tk.END, file_name)
-                single_parts.append(file_path)
+                spt = []
+                spt.append(file_path,False)
+                single_parts.append(spt)
+        if(len(assemblies) > 0 and len(single_parts) > 0):
+            self.finish_button.config(state = 'normal')
 
 
     """Creating images from 3D CAD files.
@@ -330,20 +392,41 @@ class Window1:
         global FOLDER_PATH
 
         # MOVING ASSEMBLIES to folder
-        for i in assemblies:
-            class_obj = get_class_obj(i.split("/")[-1])
-            CLASS_LIST.append(class_obj)
-            ASSEMBLIES_LIST.append(class_obj)
-            dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
-            copy_file(i,dest_file_ass)
+        print(f'assemblies {assemblies}')
+        print(f'single parts {single_parts}')
+
+        for part in assemblies:
+            print(part)
+            if part[1] == True:
+                part_name = get_class_obj(part[0])
+                print(part_name)
+                CLASS_LIST.append(part_name)
+                ASSEMBLIES_LIST.append(part_name)
+            else:
+                part_name = part[0]
+                print(part_name)
+                class_obj = get_class_obj(part_name.split("/")[-1])
+                CLASS_LIST.append(class_obj)
+                ASSEMBLIES_LIST.append(class_obj)
+                dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','assemblies')
+                copy_file(part_name,dest_file_ass)
 
         # MOVING SINGLE-PARTS to folder
-        for i in single_parts:
-            class_obj = get_class_obj(i.split("/")[-1])
-            CLASS_LIST.append(class_obj)
-            SINGLE_PARTS_LIST.append(class_obj)
-            dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
-            copy_file(i,dest_file_ass)
+        for part in single_parts:
+            print(part)
+            if part[1] == True:
+                part_name = get_class_obj(part[0])
+                print(part_name)
+                CLASS_LIST.append(part_name)
+                ASSEMBLIES_LIST.append(part_name)
+            else:
+                part_name = part[0]
+                print(part_name)
+                class_obj = get_class_obj(part_name.split("/")[-1])
+                CLASS_LIST.append(class_obj)
+                SINGLE_PARTS_LIST.append(class_obj)
+                dest_file_ass = os.path.join(FOLDER_PATH,'cad-files','single-parts')
+                copy_file(part_name,dest_file_ass)
 
         print(f'Class list: {CLASS_LIST}')
         # TODO: Create 2D screenshots from stl files.
@@ -408,7 +491,7 @@ class Window2:
         finish_button.pack(side=tk.RIGHT, padx=5)
 
         # File Types for Upload
-        self.file_types = [("Images", "*.jpg, *.png")]
+        self.file_types = [("Images", "*.jpg *.png")]
 
         # Callback for Next Window
         self.next_callback = next_callback
@@ -769,7 +852,7 @@ class Window5:
         global FOLDER_PATH
 
         # Select images to predict on
-        file_types = [("Images", "*.jpg, *.png")]
+        file_types = [("Images", "*.jpg *.png *.jpeg")]
         file_paths = filedialog.askopenfilenames(title=f"Select images to predict", filetypes=file_types, initialdir=FOLDER_PATH)
         # Display number of selected images
         self.selected_images_label.config(text=f"Selected images: {len(file_paths)}")
