@@ -150,6 +150,7 @@ def create_label_files(images_path, labels_path, class_list,assembly_list,bbox_p
         # Handle class name/label
         # Note: class_list is empty most likely, since this is the first time creating label files.
         class_name = part.split("_x")[0]
+        print(f'class_name: {class_name}')
         if class_name not in class_list:
             class_list.append(class_name)
         label = class_list.index(class_name)    
@@ -217,6 +218,8 @@ def create_label_files(images_path, labels_path, class_list,assembly_list,bbox_p
             images_path_save = images_path.replace('single-parts','combined-annotated')
             labels_path_save = labels_path.replace('single-parts','combined-annotated')
 
+        print(f'image {images_path_save} labels {labels_path_save}')
+
         # Extract the object
         object_region = image[y1:y2, x1:x2].copy()
 
@@ -239,7 +242,9 @@ def create_label_files(images_path, labels_path, class_list,assembly_list,bbox_p
         # Store label file
         filename = part.replace(".png", ".txt")
         filename = filename.replace(".jpg", ".txt")
+        print(f'filename: {filename}')
         save_path = os.path.join(labels_path_save, filename)
+        print(f'save path: {save_path}')
         with open(save_path, 'w') as file:
             file.write(f"{label} {relative_center_x:.5f} {relative_center_y:.5f} {relative_width:.5f} {relative_height:.5f}")
             

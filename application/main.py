@@ -7,6 +7,8 @@ import shutil # For copying files
 import subprocess # For opening folder in file explorer
 import platform # For checking operating system
 import yaml # For editing config.yaml file
+import numpy as np
+import cv2
 
 def get_class_obj(file_name):
     filename = file_name.split('/')[-1].split('.')[0]
@@ -208,10 +210,10 @@ class Window0:
         folders = [
             "cad-files","cad-files/assemblies","cad-files/single-parts",
             "assemblies","assemblies/images","assemblies/labels","assemblies/labels_rb", # Only images
-            "single-parts", "single-parts/images", 
+            "single-parts", "single-parts/images","single-parts/labels", 
             "combined-annotated", "combined-annotated/images", "combined-annotated/labels", 
             "images_w_bounding_boxes", "images_w_bounding_boxes/single-parts", "images_w_bounding_boxes/assemblies",
-            "test", "test/images", "test/predictions",
+            "test", "test/images", "test/predictions","test/original"
         ]
         # verify_structure = self.verify_created_structure(folders)
         # if verify_structure == False:
@@ -322,8 +324,8 @@ class Window1:
             state_next = 'disabled'
 
         # Finished Uploading Button
-        finish_button = tk.Button(root, text="Next step",state=state_next, command=self.create_images)
-        finish_button.pack(side=tk.TOP, pady=5)
+        self.finish_button = tk.Button(root, text="Next step",state=state_next, command=self.create_images)
+        self.finish_button.pack(side=tk.TOP, pady=5)
 
 
         # File Types for Upload
@@ -356,7 +358,8 @@ class Window1:
                 file_name = file_path.split("/")[-1]
                 self.assemblies_uploaded.insert(tk.END, file_name)
                 asst = []
-                asst.append(file_path,False)
+                asst.append(file_path)
+                asst.append(False)
                 assemblies.append(asst)
 
         if(len(assemblies) > 0 and len(single_parts) > 0):
@@ -375,7 +378,8 @@ class Window1:
                 file_name = file_path.split("/")[-1]
                 self.single_parts_uploaded.insert(tk.END, file_name)
                 spt = []
-                spt.append(file_path,False)
+                spt.append(file_path)
+                spt.append(False)
                 single_parts.append(spt)
         if(len(assemblies) > 0 and len(single_parts) > 0):
             self.finish_button.config(state = 'normal')
@@ -485,10 +489,12 @@ class Window2:
         self.labels_uploaded_label = tk.Label(root, text="Labels uploaded: 0")
         self.labels_uploaded_label.pack(pady=[0, 10])
 
-
         # Finished Uploading Button
         finish_button = tk.Button(root, text="Next step", command=self.next)
         finish_button.pack(side=tk.RIGHT, padx=5)
+
+        predict_button = tk.Button(root,text = "Predict", command = self.go_predict)
+        predict_button.pack(side=tk.RIGHT, padx=5)
 
         # File Types for Upload
         self.file_types = [("Images", "*.jpg *.png")]
@@ -535,6 +541,10 @@ class Window2:
         if self.next_callback:
             self.destroy()  # Destroy the widgets of the current window
             self.next_callback()   # Show the next window
+
+    def go_predict(self):
+        self.destroy()
+        window5 = Window5(root)
 
     def destroy(self):
         # Destroy all widgets in the current window
@@ -728,7 +738,7 @@ class Window4:
             classname = image.split("_x")[0]
             if classname not in found_classes:
                 found_classes.append(classname)
-        CLASS_LIST = found_classes
+        # CLASS_LIST = found_classes
 
         self.root.after(0, self.update_progress, 0)
         # 0. Create folder for everything related to the model
@@ -743,7 +753,8 @@ class Window4:
         # 1. Set correct values in config.yaml
         config_data = {
             'train': os.path.join(FOLDER_PATH, "combined-annotated"),
-            'val': os.path.join(FOLDER_PATH, "test"),
+            'val': os.path.join(FOLDER_PATH, "combined-annotated"),
+            # 'val': os.path.join(FOLDER_PATH, "test"),
             'nc': len(CLASS_LIST),    
             'names': CLASS_LIST,
         }
@@ -802,6 +813,7 @@ class Window5:
     """For inference/using the trained YOLO model on some test folder.
     """
     def __init__(self, root, next_callback=None):
+        print("Window 5")
         self.root = root
         self.title = "Assembly detection"
 
@@ -835,7 +847,7 @@ class Window5:
         finish_button.pack(side=tk.RIGHT, padx=5)
 
         # Callback for Next Window
-        self.next_callback = next_callback
+        #self.next_callback = next_callback
 
     def select_model_pt(self):
         global FOLDER_PATH
@@ -863,6 +875,12 @@ class Window5:
             filename = file_path.split("/")[-1]
             shutil.copy(file_path, os.path.join(test_folder_path, filename))
 
+        # Copy images to test folder
+        test_folder_path_o = os.path.join(FOLDER_PATH, "test", "original")
+        for file_path in file_paths:
+            filename = file_path.split("/")[-1]
+            shutil.copy(file_path, os.path.join(test_folder_path_o, filename))
+
         # Preprocess images in test/images folder
         from preprocessing import preprocess_images
         target_resolution = (800, 450)
@@ -885,29 +903,36 @@ class Window5:
 
         print("Starting predicting...")
         # Predict
+        from pathlib import Path
         from ultralytics import YOLO
         weights_path = self.model_path_label.cget("text").split(": ")[1]
+        weights_path = Path(weights_path).absolute()
         print("weights_path:", weights_path)
         yolo = YOLO(weights_path) #, imgsz=640)  # Adjust imgsz as needed
         #yolo.val(iou=0.75, conf=0.5)
-        source_path = os.path.join(FOLDER_PATH, "test/images")
+        source_path = os.path.join(FOLDER_PATH, "test","images")
+        original_path = os.path.join(FOLDER_PATH, "test","original")
         #results = yolo(source_path)
 
         # Get all images in test/images folder
         images_to_predict = os.listdir(source_path)
-
+        target_res = (800,450)
         from PIL import Image
-        for image in images_to_predict:        
-            image_to_predict_path = os.path.join(source_path, image)
-            results = yolo(image_to_predict_path)  # results list
-            # Show the results
-            for r in results:
-                im_array = r.plot()  # plot a BGR numpy array of predictions
-                im = Image.fromarray(im_array[..., ::-1])  # RGB PIL image
-                im.show()  # show image
-                pred_save_path = os.path.join(FOLDER_PATH, "test/predictions", image)
-                im.save(pred_save_path)  # save image
-
+        for image in images_to_predict:
+            if 'png' in image:        
+                image_to_predict_path = os.path.join(source_path, image)
+                image_to_original_path = os.path.join(original_path, image)
+                original_image = Image.open(image_to_original_path)
+                original_image = np.array(original_image)
+                original_image = cv2.resize(original_image, target_res)
+                results = yolo(image_to_predict_path)  # results list
+                # Show the results
+                for r in results:
+                    im_array = r.plot(img = original_image,pil = True)  # plot a BGR numpy array of predictions
+                    im = Image.fromarray(im_array)  # RGB PIL image
+                    im.show()  # show image
+                    pred_save_path = os.path.join(FOLDER_PATH, "test/predictions", image)
+                    im.save(pred_save_path)  # save image
         self.show_results_folder()
         os.chdir(FOLDER_PATH)
         print("Done predicting")
@@ -939,12 +964,14 @@ assemblies = []
 single_parts = []
 
 def main():
+    global root
     root = tk.Tk()
     root.title("Assembly detection")
 
     # TODO: Remove
     global FOLDER_PATH
     global CLASS_LIST
+    
     
     def start_application():
         show_window0()

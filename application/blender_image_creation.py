@@ -47,12 +47,34 @@ def create_screenshots(single_parts_stl_files, assemblies_stl_files, FOLDER_PATH
     bpy.context.scene.node_tree.links.new(node_rl_layers.outputs['Image'], node_alpha_over.inputs[2])
     bpy.context.scene.node_tree.links.new(node_alpha_over.outputs['Image'], node_composite.inputs['Image'])
 
+    single_parts_stl_files = images_created(single_parts_stl_files,single_parts_save_path,False)
+    assemblies_stl_files = images_created(assemblies_stl_files,assemblies_save_path,True)
+
     # Create images for single parts
     if len(single_parts_stl_files) > 0:
         create_screenshots_for_stl_file(single_parts_stl_files, single_parts_save_path, is_assembly=False)
     # Create images for assemblies
     if len(assemblies_stl_files) > 0:
         create_screenshots_for_stl_file(assemblies_stl_files, assemblies_save_path, is_assembly=True)
+
+def images_created(stl_files,path_save,is_assembly):
+    result = []
+    if is_assembly:
+        total_images = 125
+    else:
+        total_images = 375
+
+    for i in stl_files:
+        stl_base_name = os.path.basename(i)
+        stl_base_name = os.path.splitext(stl_base_name)[0]
+        print(f'i {i} base_name {stl_base_name}')
+        files = os.listdir(path_save)
+        images_found = len([name for name in files if stl_base_name in name])
+        
+        if images_found < total_images:
+            result.append(i)
+
+    return result
 
 def create_screenshots_for_stl_file(stl_files, save_path, is_assembly):
     """Create images for the specified stl files and save them to the specified path.
@@ -267,4 +289,4 @@ assemblies_stl_files = glob.glob(search_pattern)
 
 print(f'single parts: {single_parts_stl_files} ass parts: {assemblies_stl_files}')
 print(f'folder path: {folder_path}')
-# create_screenshots(single_parts_stl_files, assemblies_stl_files, folder_path)
+create_screenshots(single_parts_stl_files, assemblies_stl_files, folder_path)
